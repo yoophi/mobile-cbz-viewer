@@ -41,6 +41,29 @@ python3 scripts/verify-android-scroll-zoom.py
 
 앞선 동일 AVD의 PSS 기준450 MiB를 초과했으므로 메모리 검증은 통과로 처리하지 않습니다. 확대 전의 서재부터 기준보다 높아 원인을 아직 확대 비트맵에 한정할 수 없습니다. 기존 커밋과의 동일 조건 비교, 개발 도구·런타임 초기 사용량과 네이티브 힙의 구분, 릴리스·저메모리 기기의 재측정이 필요합니다. 기존 기준을 높여 통과 처리하지 않습니다. [원시 관찰](validation/android-scroll-zoom-memory.json)에 기록했습니다.
 
+## 같은 네이티브 앱에서 소스 비교
+
+같은 설치 APK·에뮬레이터·보관 파일·읽기 위치(4/40)를 유지하고 제스처 전 `0d3a568`과 제스처 후 `8f27168`의 Metro 소스를 번갈아 실행했습니다. 각 실행은 앱 프로세스를 종료한 뒤 새로 시작하고, 서재 표지와 실제 스크롤 이미지 표시를 확인한 후2초·10초에 측정했습니다. 기준 소스는 별도 worktree에 `npm ci`로 동일 잠금 파일을 설치했습니다. 의존성 symlink로 시도했던 최초 실행은 이미지 모듈 로드 오류가 있었으므로 폐기했습니다.
+
+| 소스 | 서재 PSS (MiB) | 스크롤 PSS (MiB) | 스크롤 malloc 비트맵 (MiB) |
+| --- | --- | --- | --- |
+| `0d3a568` | 386.8–392.0 | 404.6–421.7 | 25.1 |
+| `8f27168` | 486.6–493.0 | 537.9–559.0 | 25.1 |
+
+10초 시점의 네이티브 힙 PSS도 서재 약175.6→273.8 MiB, 스크롤 약204.2→341.3 MiB로 증가했습니다. 설치된 네이티브 모듈과 비트맵 크기가 같은 조건에서도 제스처 소스 추가에 따른 높은 초기 사용량이 재현됐습니다. 이것만으로 주 JS 힙, Reanimated UI 런타임, 기타 네이티브 할당 중 어느 쪽의 원인인지 확정하지는 않습니다. [기준 소스](validation/android-memory-before-zoom.json), [현재 소스](validation/android-memory-with-zoom.json)에 모든 관찰을 보존합니다.
+
+재현 도구는 `scripts/compare-android-reader-memory.py --port <Metro 포트> --source-commit <해시> --output <JSON 경로>`입니다. 같은 APK와 데이터를 사용하고, UI 확인 실패 시 비교를 성공으로 처리하지 않습니다. 자동 개발 앱 재시작은 데이터를 초기화하지 않습니다.
+
+## 최적화 JS 실행 오류 수정
+
+같은 개발 APK에서 `expo start --no-dev --minify`로 실행했을 때, 이미지 처리의 동적 import가 추가 JavaScript 청크의 호스팅 URL을 찾으려 했고 네이티브 환경의 `location` 부재로 서재·책 열기가 실패했습니다. 이 실패 실행의 메모리 수치는 유효한 비교 표본으로 사용하지 않았습니다.
+
+`library.ts`와 `scroll-cache.ts`의 Expo Image·ImageManipulator를 정적 import로 바꾸어 이미지 처리 경로에서 추가 청크 URL을 요구하지 않도록 했습니다. 동일 조건에서 수정 후 서재·40페이지 책의 실제 스크롤 이미지·서재 복귀를 확인했습니다. 이 검증은 개발 APK에 공급한 최적화 JS이며 실제 릴리스 네이티브 빌드 검증은 별도입니다. 수정 코드의 Android 네이티브 프로브20개(페이지·표지6, 이미지 방향·긴 구간8, 캐시 압박·취소6)도 통과했습니다. 최적화 JS에서 실제 두·세 손가락 확대, 스크롤 잠금·재개, 페이지·모드 초기화와 SQLite 위치 유지 검증15개도 통과했습니다. [제스처 결과](validation/android-scroll-zoom-production-js.json). [원시 결과](validation/android-static-image-probes.json).
+
+수정 후 개발 JS의 스크롤 PSS는 약557.5–566.0 MiB, 최적화 JS는 약487.8–503.7 MiB였습니다. 두 조건 모두450 MiB 기준을 초과했습니다. 정적 import 수정으로 런타임 로딩 오류를 해결했으며, 전체 메모리 문제가 해결됐다고 판정하지 않습니다. [개발 JS](validation/android-memory-development-static-imports.json), [최적화 JS](validation/android-memory-production-js-static-imports.json)에 소스가 `8f27168` 위의 미커밋 정적 import 패치였음을 명시했습니다.
+
+Android arm64 릴리스 APK 빌드도 시작했으나 아직 완료되지 않았습니다. 네이티브 의존성 다운로드와 실제 빌드·실행이 끝난 뒤 서명 호환성을 확인해 데이터를 유지한 채 측정해야 합니다.
+
 ## 남은 범위
 
 - 스크롤 관성 동작 중 확대 시작 및 회전 중 조작의 추가 네이티브 검증

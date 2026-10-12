@@ -1,0 +1,108 @@
+{
+  "platform": "Android API36",
+  "sourcePatch": "static image module imports",
+  "checksCount": 20,
+  "results": [
+    {
+      "probe": "pages",
+      "platform": "android",
+      "checks": [
+        {
+          "name": "v2-to-v3 migration preserves book/source metadata and requires new page cache",
+          "passed": true
+        },
+        {
+          "name": "Mixed PNG/WebP/JPEG pages sorted naturally; hidden entries excluded",
+          "passed": true
+        },
+        {
+          "name": "All three image formats decode from local files",
+          "passed": true
+        },
+        {
+          "name": "First-page JPEG cover saved and decodable within size budget",
+          "passed": true
+        },
+        {
+          "name": "Page order and sizes persist after reopening database",
+          "passed": true
+        },
+        {
+          "name": "Decoder failure becomes a cover warning without crashing the library",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "probe": "dimensions",
+      "platform": "android",
+      "checks": [
+        {
+          "name": "v3 ready book, cover, order and original are preserved during v4 migration",
+          "passed": true
+        },
+        {
+          "name": "Bounded file header backfill obtains PNG/JPEG/WebP ratios and EXIF rotation",
+          "passed": true
+        },
+        {
+          "name": "Header geometry matches native normalized image dimensions",
+          "passed": true
+        },
+        {
+          "name": "Geometry persists across reopen; corrupt metadata remains nonfatal and nullable",
+          "passed": true
+        },
+        {
+          "name": "Published PNG bands survive staging cleanup and normalize JPEG EXIF orientation",
+          "passed": true
+        },
+        {
+          "name": "Shared source job creates 30 bounded strips covering a 512x30000 image without gaps",
+          "passed": true
+        },
+        {
+          "name": "Missing strip regenerates the complete atomic page cache while original survives",
+          "passed": true
+        },
+        {
+          "name": "Unreferenced queued work cancels before native decode and preserves published files",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "probe": "scroll-cache",
+      "platform": "android",
+      "checks": [
+        {
+          "name": "128 MiB reservation evicts the oldest unleased strips, protects active strips and keeps newer cache",
+          "passed": true
+        },
+        {
+          "name": "Pinned saturation fails without exceeding the cache cap or deleting active strips/source files",
+          "passed": true
+        },
+        {
+          "name": "Released pressure permits regeneration from the original extracted page",
+          "passed": true
+        },
+        {
+          "name": "Cancellation after native strip output waits for settlement and removes unpublished staging only",
+          "passed": true
+        },
+        {
+          "name": "Interrupted long page regenerates all 30 strips without affecting other cache or original",
+          "passed": true
+        },
+        {
+          "name": "Reopening removes abandoned owned scroll staging while preserving ready pages and source archive",
+          "passed": true
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

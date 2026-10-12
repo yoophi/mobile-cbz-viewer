@@ -1,0 +1,49 @@
+{
+  "sourceCommit": "8f27168",
+  "sourceDirty": true,
+  "metroPort": 8084,
+  "platform": "Android emulator API36",
+  "developmentBuild": true,
+  "jsMode": "development",
+  "sameNativeApp": "com.yoophi.mobilecbzviewer",
+  "samples": [
+    {
+      "stage": "library after ready +2s",
+      "pssKiB": 487798,
+      "nativeHeapPssKiB": 269444,
+      "bitmapCount": 5,
+      "bitmapKiB": 1354
+    },
+    {
+      "stage": "library after ready +10s",
+      "pssKiB": 490631,
+      "nativeHeapPssKiB": 269284,
+      "bitmapCount": 5,
+      "bitmapKiB": 1354
+    },
+    {
+      "stage": "scroll after image ready +2s",
+      "pssKiB": 579530,
+      "nativeHeapPssKiB": 348137,
+      "bitmapCount": 10,
+      "bitmapKiB": 25674
+    },
+    {
+      "stage": "scroll after image ready +10s",
+      "pssKiB": 570905,
+      "nativeHeapPssKiB": 348133,
+      "bitmapCount": 10,
+      "bitmapKiB": 25674
+    },
+    {
+      "stage": "return library +2s",
+      "pssKiB": 559833,
+      "nativeHeapPssKiB": 335021,
+      "bitmapCount": 7,
+      "bitmapKiB": 10314
+    }
+  ],
+  "readerCounter": "4 / 40",
+  "sourcePatch": "static expo-image and expo-image-manipulator imports in library and scroll-cache",
+  "withinReferencePssBudget": false
+}

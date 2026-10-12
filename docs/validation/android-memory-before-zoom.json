@@ -1,0 +1,45 @@
+{
+  "sourceCommit": "0d3a568",
+  "metroPort": 8082,
+  "platform": "Android emulator API36",
+  "developmentBuild": true,
+  "sameNativeApp": "com.yoophi.mobilecbzviewer",
+  "samples": [
+    {
+      "stage": "library after ready +2s",
+      "pssKiB": 401433,
+      "nativeHeapPssKiB": 190346,
+      "bitmapCount": 6,
+      "bitmapKiB": 1359
+    },
+    {
+      "stage": "library after ready +10s",
+      "pssKiB": 396114,
+      "nativeHeapPssKiB": 179766,
+      "bitmapCount": 5,
+      "bitmapKiB": 1354
+    },
+    {
+      "stage": "scroll after image ready +2s",
+      "pssKiB": 431827,
+      "nativeHeapPssKiB": 209118,
+      "bitmapCount": 10,
+      "bitmapKiB": 25674
+    },
+    {
+      "stage": "scroll after image ready +10s",
+      "pssKiB": 414324,
+      "nativeHeapPssKiB": 209118,
+      "bitmapCount": 10,
+      "bitmapKiB": 25674
+    },
+    {
+      "stage": "return library +2s",
+      "pssKiB": 401155,
+      "nativeHeapPssKiB": 194150,
+      "bitmapCount": 7,
+      "bitmapKiB": 10314
+    }
+  ],
+  "readerCounter": "4 / 40"
+}

@@ -1,0 +1,24 @@
+{
+  "platform": "Android emulator API36",
+  "passed": 15,
+  "checks": [
+    "base one-finger scroll changes source position",
+    "two-finger moving pinch activates zoom without scrolling",
+    "zoom remains active after drag (540, 1450) to (540, 600)",
+    "zoom remains active after drag (540, 600) to (30, 1650)",
+    "zoom remains active after drag (900, 1400) to (1050, 300)",
+    "zoomed vertical and edge drags preserve source position",
+    "adding and removing third finger preserves source position and zoom",
+    "explicit reset returns to base scale",
+    "one-finger scrolling resumes after reset",
+    "scroll mode double-tap zoom activates",
+    "double-tap zoom also locks native scrolling",
+    "double-tap reset restores scrolling scale",
+    "explicit scroll page navigation resets zoom and moves to requested page",
+    "mode change resets zoom",
+    "return to scroll keeps source anchor with base zoom"
+  ],
+  "developmentBuild": true,
+  "jsMode": "production",
+  "sourcePatch": "static image module imports"
+}

@@ -1,4 +1,6 @@
 import { Directory, File, Paths } from 'expo-file-system';
+import { Image } from 'expo-image';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import type { ComicPage } from './library';
 import { checkCancelled } from '@/utils/zip-validation';
 import { scrollBands, scrollDecodeSize } from '@/utils/scroll-layout';
@@ -72,8 +74,6 @@ export function createScrollCache(root: () => Directory, staging: () => Director
       const stage = new Directory(staging(), String(page.comicId), String(page.position));
       if (stage.exists) stage.delete();
       stage.create({ intermediates: true });
-      const { Image } = await import('expo-image');
-      const { ImageManipulator, SaveFormat } = await import('expo-image-manipulator');
       let loaded: Awaited<ReturnType<typeof Image.loadAsync>> | undefined;
       let base: Awaited<ReturnType<ReturnType<typeof ImageManipulator.manipulate>['renderAsync']>> | undefined;
       let context: ReturnType<typeof ImageManipulator.manipulate> | undefined;

@@ -1,6 +1,8 @@
 import type { DocumentPickerAsset } from 'expo-document-picker';
 import { Directory, File, Paths } from 'expo-file-system';
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
+import { Image } from 'expo-image';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
 import { checkCancelled, ComicArchiveError, inspectArchive, verifyArchiveImages, ZIP_LIMITS } from '@/utils/zip-validation';
 import { comparePagePaths } from '@/utils/page-order';
@@ -32,13 +34,10 @@ function pageDimensions(file: File) {
 async function clearNativeImageDiskCache() {
   // Image.loadAsync used by cover generation has native loader defaults.
   // Pages/covers use cachePolicy=none; retain only our budgeted extracted files.
-  const { Image } = await import('expo-image');
   if (!await Image.clearDiskCache()) throw new ComicArchiveError('이미지 캐시를 정리하지 못했습니다. 저장 공간을 확인해 주세요.');
 }
 
 async function createCover(source: File, destination: File) {
-  const { Image } = await import('expo-image');
-  const { ImageManipulator, SaveFormat } = await import('expo-image-manipulator');
   const image = await Image.loadAsync(source.uri, { maxWidth: 240, maxHeight: 360 });
   const context = ImageManipulator.manipulate(image);
   let rendered: Awaited<ReturnType<typeof context.renderAsync>> | undefined;
