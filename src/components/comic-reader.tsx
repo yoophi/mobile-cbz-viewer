@@ -1,12 +1,14 @@
-import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
-import { openComic, prepareComic, retainComic, type Comic, type ComicPage } from '@/services/library';
-import { pageAfter, physicalPageAction, type ReadingDirection } from '@/utils/reader-navigation';
+import { openComic, prepareComic, retainComic, getReadingState, createComicReadingWriter, type Comic, type ComicPage } from '@/services/library';
+import { pageAfter, physicalPageAction } from '@/utils/reader-navigation';
 import { ScrollReader } from './scroll-reader';
 import type { ReadingPosition } from '@/utils/scroll-layout';
+import { DEFAULT_READING_STATE, normalizeReadingState, type ReadingState } from '@/utils/reading-state';
+import { ReadingSaveNotice } from './reading-save-notice';
 
 function ReaderButton({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
   return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled}
@@ -34,11 +36,12 @@ function PageImage({ page, repair }: { page: ComicPage; repair: () => void }) {
 
 export function ComicReader({ id }: { id?: number }) {
   const [book, setBook] = useState<{ comic: Comic; pages: ComicPage[] }>();
-  const [position, setPosition] = useState<ReadingPosition>({ index: 0, fraction: 0 });
-  const [navigation, setNavigation] = useState<ReadingPosition>(position);
-  const [mode, setMode] = useState<'page' | 'scroll'>('page');
-  const index = position.index;
-  const [direction, setDirection] = useState<ReadingDirection>('ltr');
+  const [reading, setReading] = useState<ReadingState>(DEFAULT_READING_STATE);
+  const readingRef = useRef(reading);
+  const writer = useRef<ReturnType<typeof createComicReadingWriter> | undefined>(undefined);
+  const [navigation, setNavigation] = useState<ReadingPosition>({ index: 0, fraction: 0 });
+  const { index, mode, direction } = reading;
+  const position = { index, fraction: reading.fraction };
   const [request, setRequest] = useState({ version: 0, repair: false });
   const [busy, setBusy] = useState(id !== undefined);
   const [error, setError] = useState<string>();
@@ -52,22 +55,47 @@ export function ComicReader({ id }: { id?: number }) {
     const release = retainComic(comicId);
     const controller = new AbortController();
     let active = true;
+    let currentWriter: ReturnType<typeof createComicReadingWriter> | undefined;
     async function load() {
       if (request.repair && repairedVersion.current !== request.version) {
         await prepareComic(comicId, controller.signal);
         repairedVersion.current = request.version;
       }
-      return openComic(comicId, controller.signal);
+      const result = await openComic(comicId, controller.signal);
+      const state = normalizeReadingState(await getReadingState(comicId, result.pages.length), result.pages.length);
+      return { result, state };
     }
-    load().then((result) => {
+    load().then(({ result, state }) => {
       if (!active) return;
       setBook(result);
-      setPosition((value) => ({ ...value, index: Math.min(value.index, result.pages.length - 1) }));
+      readingRef.current = state; setReading(state); setNavigation({ index: state.index, fraction: state.fraction });
+      currentWriter = createComicReadingWriter(comicId); writer.current = currentWriter;
+      // Also persist corrected anchors after page count changes or migration.
+      currentWriter.update(state);
     }).catch((cause) => {
       if (active) setError(cause instanceof Error ? cause.message : '만화를 열지 못했습니다.');
     }).finally(() => { if (active) setBusy(false); });
-    return () => { active = false; controller.abort(); release(); setFocused(false); };
+    return () => {
+      active = false; controller.abort(); release(); setFocused(false);
+      if (writer.current === currentWriter) writer.current = undefined;
+      // Save failures stay visible in both the reader and library via ReadingSaveNotice.
+      void currentWriter?.dispose().catch(() => {});
+    };
   }, [id, request]));
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') void writer.current?.flush().catch(() => {});
+    });
+    return () => subscription.remove();
+  }, []);
+
+  const updateReading = useCallback((patch: Partial<ReadingState>, flush = false) => {
+    const previous = readingRef.current; const next = { ...previous, ...patch };
+    if (next.index === previous.index && next.fraction === previous.fraction && next.mode === previous.mode && next.direction === previous.direction) return;
+    readingRef.current = next; setReading(next); writer.current?.update(next);
+    if (flush) void writer.current?.flush().catch(() => {});
+  }, []);
 
   function reload(repair: boolean) {
     setBusy(true);
@@ -78,7 +106,7 @@ export function ComicReader({ id }: { id?: number }) {
     setBusy(true); setError(undefined);
     setRequest((value) => ({ version: value.version + 1, repair: true }));
   }, []);
-  const scrollPosition = useCallback((value: ReadingPosition) => setPosition(value), []);
+  const scrollPosition = useCallback((value: ReadingPosition) => updateReading(value), [updateReading]);
   const count = book?.pages.length ?? 0;
   const page = book?.pages[index];
   return <SafeAreaView style={styles.screen}>
@@ -86,6 +114,7 @@ export function ComicReader({ id }: { id?: number }) {
       <ReaderButton label="서재로" onPress={() => router.canGoBack() ? router.back() : router.replace('/')} />
       <Text numberOfLines={1} style={styles.title}>{book?.comic.name ?? '만화 열람'}</Text>
     </View>
+    <ReadingSaveNotice id={id} />
     {id === undefined ? <Text accessibilityRole="alert" style={styles.error}>올바르지 않은 서재 주소입니다.</Text>
       : !focused ? <View style={styles.canvas} />
       : busy ? <View style={styles.canvas}><ActivityIndicator color="#9abfff" /><Text style={styles.text}>페이지 준비 중…</Text></View>
@@ -95,17 +124,17 @@ export function ComicReader({ id }: { id?: number }) {
         : <PageImage key={`${id}:${index}:${request.version}`} page={page} repair={repair} /> : null}
     <View style={styles.controls}>
       <ReaderButton label={`열람 모드: ${mode === 'page' ? '페이지' : '세로 스크롤'}`} disabled={busy || !!error || !count}
-        onPress={() => { setNavigation(position); setMode((value) => value === 'page' ? 'scroll' : 'page'); }} />
+        onPress={() => { setNavigation(position); updateReading({ mode: mode === 'page' ? 'scroll' : 'page' }, true); }} />
       <ReaderButton label={`읽기 방향: ${direction === 'ltr' ? '좌→우' : '우→좌'}`}
-        onPress={() => setDirection((value) => value === 'ltr' ? 'rtl' : 'ltr')} />
+        disabled={busy || !!error || !count} onPress={() => updateReading({ direction: direction === 'ltr' ? 'rtl' : 'ltr' }, true)} />
       <Text accessibilityLiveRegion="polite" style={styles.text}>{count ? `${index + 1} / ${count}` : '— / —'}</Text>
       <View style={styles.row}>{(['left', 'right'] as const).map((side) => {
         const action = physicalPageAction(side, direction);
         return <ReaderButton key={side} label={`${side === 'left' ? '← ' : ''}${action === 'next' ? '다음' : '이전'}${side === 'right' ? ' →' : ''}`}
           disabled={busy || !!error || !count || (action === 'next' ? index === count - 1 : index === 0)}
           onPress={() => {
-            const next = { index: pageAfter(index, count, action), fraction: 0 };
-            setPosition(next); setNavigation(next);
+            const next = { index: pageAfter(readingRef.current.index, count, action), fraction: 0 };
+            updateReading(next, true); setNavigation(next);
           }} />;
       })}</View>
     </View>

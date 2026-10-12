@@ -7,6 +7,7 @@ import { comparePagePaths } from '@/utils/page-order';
 import { CACHE_LIMITS, selectCacheEvictions, type CacheEntry, type CacheBudget } from '@/utils/cache-policy';
 import { readImageDimensions } from '@/utils/image-dimensions';
 import { createScrollCache } from './scroll-cache';
+import { createReadingStore } from './reading-store';
 
 export type Comic = {
   id: number; name: string; uri: string; size: number; importedAt: number;
@@ -62,6 +63,7 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
   const readers = new Map<number, number>();
   const stagingRoot = () => new Directory(Paths.cache, `${cacheNamespace}-staging`);
   const extractedRoot = () => new Directory(Paths.cache, `${cacheNamespace}-extracted`);
+  const readingStore = createReadingStore(getDatabase);
   const scrollCache = createScrollCache(extractedRoot, () => new Directory(Paths.cache, `${cacheNamespace}-scroll-staging`),
     async (work) => {
       if (preparing) throw new ComicArchiveError('다른 파일을 처리하고 있습니다. 잠시 후 다시 시도해 주세요.');
@@ -190,7 +192,7 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
           );`);
         await db.withExclusiveTransactionAsync(async (transaction) => {
           const version = (await transaction.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version ?? 0;
-          if (version > 4) throw new Error('지원하지 않는 서재 버전입니다. 앱을 업데이트해 주세요.');
+          if (version > 5) throw new Error('지원하지 않는 서재 버전입니다. 앱을 업데이트해 주세요.');
           if (version < 2) {
             await transaction.execAsync(`ALTER TABLE comics ADD COLUMN archivePath TEXT;
               ALTER TABLE comics ADD COLUMN status TEXT NOT NULL DEFAULT 'stored';
@@ -219,6 +221,13 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
             await transaction.execAsync(`ALTER TABLE comic_pages ADD COLUMN width INTEGER;
               ALTER TABLE comic_pages ADD COLUMN height INTEGER;
               PRAGMA user_version = 4;`);
+          }
+          if (version < 5) {
+            await transaction.execAsync(`CREATE TABLE comic_reading_state (
+              comicId INTEGER PRIMARY KEY REFERENCES comics(id) ON DELETE CASCADE,
+              pageIndex INTEGER NOT NULL, fraction REAL NOT NULL, mode TEXT NOT NULL,
+              direction TEXT NOT NULL, updatedAt INTEGER NOT NULL);
+              PRAGMA user_version = 5;`);
           }
         });
         await db.execAsync('CREATE TABLE IF NOT EXISTS comic_cache_access (comicId INTEGER PRIMARY KEY REFERENCES comics(id) ON DELETE CASCADE, lastAccess INTEGER NOT NULL)');
@@ -408,7 +417,8 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
     } finally { preparing = false; }
   }
 
-  return { listComics, listPages, openComic, importComic, prepareComic, retainComic, acquireScrollPage, clearExtractedCache, dispose: async () => {
+  return { listComics, listPages, openComic, importComic, prepareComic, retainComic, acquireScrollPage, clearExtractedCache, ...readingStore, dispose: async () => {
+    await readingStore.drainReadingWrites();
     await scrollCache.stop();
     if (preparing) throw new Error('Extraction is still running');
     if (database) await (await database).closeAsync();
@@ -416,4 +426,5 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
   } };
 }
 
-export const { listComics, listPages, openComic, importComic, prepareComic, retainComic, acquireScrollPage, clearExtractedCache } = createLibraryStore();
+export const { listComics, listPages, openComic, importComic, prepareComic, retainComic, acquireScrollPage, clearExtractedCache,
+  getReadingState, saveReadingState, createComicReadingWriter, getReadingSaveFailures, subscribeReadingSaveFailures, retryReadingSaves } = createLibraryStore();

@@ -1,6 +1,6 @@
 # 세로 스크롤 열람 (#8, 진행 중)
 
-페이지 모드와 세로 스크롤은 같은 자연 정렬 페이지 목록과 `{index, fraction}` 위치 모델을 사용한다. 세로 스크롤의 fraction은 페이지 이미지 상단에서 현재 화면 상단까지의 비율이다. 모드 전환은 현재 페이지를 보존하며, 화면 폭·높이가 바뀌면 새 목록의 같은 이미지 위치로 이동한다. 읽던 위치·모드의 재실행 복원은 #10에서 구현한다.
+페이지 모드와 세로 스크롤은 같은 자연 정렬 페이지 목록과 `{index, fraction}` 위치 모델을 사용한다. 세로 스크롤의 fraction은 페이지 이미지 상단에서 현재 화면 상단까지의 비율이다. 모드 전환은 현재 페이지를 보존하며, 화면 폭·높이가 바뀌면 새 목록의 같은 이미지 위치로 이동한다. 읽던 위치·모드의 재실행 복원은 [#10 구현 기록](reading-state.md)에 남긴다.
 
 ## 이미지 크기와 고정 레이아웃
 
@@ -44,6 +44,8 @@ python3 scripts/verify-android-scroll.py --book-id 4
 
 ## 남은 완료 조건
 
-#8은 iOS 실행 검증과 장시간/저메모리/캐시 압박 검증이 남아 진행 중이다. Xcode 라이선스 승인 전에는 iOS 네이티브 실행을 검증할 수 없다. iOS 번들 성공으로 이를 대신하지 않는다. PNG/WebP의 EXIF 회전, 애니메이션 이미지, 생성 중 프로세스 종료와 네이티브 임시 출력 잔여 파일도 추가 확인이 필요하다. #7의 플랫폼별 메모리·캐시 검증도 함께 유지한다.
+추가 Android 검증 6개에서 128 MiB 캐시 예약에 따른 오래된 비활성 구간 정리·활성 구간 보호, 활성 구간만으로 용량이 찬 경우 오류와 한도 유지, 참조 해제 후 재생성, 실제 PNG 구간 출력 뒤 취소·임시 파일 정리·재시도, 재열기 시 중단된 임시 디렉터리 정리를 확인했다. [원시 결과](validation/android-scroll-cache-pressure.json). 용량 압박은 별도 진단 디렉터리에 1 MiB 단위로 실제 파일을 써 재현했다. 개인 서재에는 검사 데이터를 만들지 않는다. 개발 전용 경로는 `mobilecbzviewer://scroll-cache-diagnostics`다.
+
+#8은 iOS 실행 검증과 장시간/저메모리/실기기 캐시 압박 검증이 남아 진행 중이다. Xcode 라이선스 승인 전에는 iOS 네이티브 실행을 검증할 수 없다. iOS 번들 성공으로 이를 대신하지 않는다. PNG/WebP의 EXIF 회전, 애니메이션 이미지, 생성 중 프로세스 종료와 네이티브 임시 출력 잔여 파일도 추가 확인이 필요하다. #7의 플랫폼별 메모리·캐시 검증도 함께 유지한다.
 
 API 근거: [Expo SDK 57 Image](https://docs.expo.dev/versions/v57.0.0/sdk/image/), [ImageManipulator](https://docs.expo.dev/versions/v57.0.0/sdk/imagemanipulator/), [React Native 0.86 FlatList](https://reactnative.dev/docs/0.86/flatlist).

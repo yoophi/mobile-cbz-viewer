@@ -1,0 +1,89 @@
+{
+  "platform": "android",
+  "api": "36",
+  "checks": [
+    {
+      "name": "Page movement and RTL direction persist",
+      "passed": true
+    },
+    {
+      "name": "Scroll page and within-image fraction persist",
+      "passed": true
+    },
+    {
+      "name": "Leaving and reopening the reader restores page, fraction and settings",
+      "passed": true
+    },
+    {
+      "name": "Rotation preserves the durable source fraction",
+      "passed": true
+    },
+    {
+      "name": "Mode round trip preserves the scroll anchor",
+      "passed": true
+    },
+    {
+      "name": "Background, force-stop and relaunch restore the same reader",
+      "passed": true
+    }
+  ],
+  "states": [
+    {
+      "stage": "page and RTL",
+      "index": 2,
+      "fraction": 0.0,
+      "mode": "page",
+      "direction": "rtl",
+      "updatedAt": 1791793512945
+    },
+    {
+      "stage": "scrolled anchor",
+      "index": 2,
+      "fraction": 0.9981483282277671,
+      "mode": "scroll",
+      "direction": "rtl",
+      "updatedAt": 1791793523297
+    },
+    {
+      "stage": "reopened reader",
+      "index": 2,
+      "fraction": 0.9981483282277671,
+      "mode": "scroll",
+      "direction": "rtl",
+      "updatedAt": 1791793529746
+    },
+    {
+      "stage": "landscape",
+      "index": 2,
+      "fraction": 0.9981483282277671,
+      "mode": "scroll",
+      "direction": "rtl",
+      "updatedAt": 1791793529746
+    },
+    {
+      "stage": "mode round trip",
+      "index": 2,
+      "fraction": 0.9981483282277671,
+      "mode": "scroll",
+      "direction": "rtl",
+      "updatedAt": 1791793547567
+    },
+    {
+      "stage": "background",
+      "index": 2,
+      "fraction": 0.9981483282277671,
+      "mode": "scroll",
+      "direction": "rtl",
+      "updatedAt": 1791793547567
+    },
+    {
+      "stage": "process relaunched",
+      "index": 2,
+      "fraction": 0.9981483282277671,
+      "mode": "scroll",
+      "direction": "rtl",
+      "updatedAt": 1791793561236
+    }
+  ],
+  "passed": true
+}

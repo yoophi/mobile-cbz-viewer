@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, Vie
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import { ComicCover } from '@/components/comic-cover';
+import { ReadingSaveNotice } from '@/components/reading-save-notice';
 
 import { importComic, listComics, prepareComic, type Comic } from '@/services/library';
 
@@ -74,6 +75,7 @@ export default function LibraryScreen() {
       <View style={styles.content}>
         <Text style={styles.eyebrow}>MOBILE CBZ VIEWER</Text>
         <Text style={styles.title}>나의 만화 서재</Text>
+        <ReadingSaveNotice />
         <Text style={styles.description}>아이폰 · 아이패드 · 안드로이드를 위한 오프라인 만화 리더 프로젝트</Text>
         <Pressable accessibilityRole="button" accessibilityState={{ disabled: busy || !supported }}
           disabled={busy || !supported} onPress={pickComic}

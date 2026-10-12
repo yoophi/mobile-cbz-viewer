@@ -1,0 +1,47 @@
+{
+  "platform": "android",
+  "checks": [
+    {
+      "name": "v4-to-v5 migration preserves ready pages, geometry, cover and original with default reading settings",
+      "passed": true,
+      "details": {
+        "schemaVersion": 5,
+        "ready": true,
+        "pageCount": 3,
+        "coverPresent": true,
+        "defaultSettings": true,
+        "sourceCount": 1,
+        "preservedPages": true
+      }
+    },
+    {
+      "name": "Page, source fraction, mode, direction and timestamp survive database reopen",
+      "passed": true
+    },
+    {
+      "name": "Reading state is isolated per book and stores no sandbox file URI",
+      "passed": true
+    },
+    {
+      "name": "Relative archive path survives stale URI and missing cache; reduced page count clamps the saved anchor",
+      "passed": true
+    },
+    {
+      "name": "Actual SQLite failure rejects save, publishes a retryable warning and preserves persisted data",
+      "passed": true
+    },
+    {
+      "name": "Retry commits the newest failed state and clears the shared warning",
+      "passed": true
+    },
+    {
+      "name": "Serialized rapid saves restore the newest state rather than an older in-flight write",
+      "passed": true
+    },
+    {
+      "name": "Cache eviction and regeneration preserve durable reading state",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

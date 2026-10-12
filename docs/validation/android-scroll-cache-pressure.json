@@ -1,0 +1,30 @@
+{
+  "platform": "android",
+  "checks": [
+    {
+      "name": "128 MiB reservation evicts the oldest unleased strips, protects active strips and keeps newer cache",
+      "passed": true
+    },
+    {
+      "name": "Pinned saturation fails without exceeding the cache cap or deleting active strips/source files",
+      "passed": true
+    },
+    {
+      "name": "Released pressure permits regeneration from the original extracted page",
+      "passed": true
+    },
+    {
+      "name": "Cancellation after native strip output waits for settlement and removes unpublished staging only",
+      "passed": true
+    },
+    {
+      "name": "Interrupted long page regenerates all 30 strips without affecting other cache or original",
+      "passed": true
+    },
+    {
+      "name": "Reopening removes abandoned owned scroll staging while preserving ready pages and source archive",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

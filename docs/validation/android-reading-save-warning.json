@@ -1,0 +1,30 @@
+{
+  "platform": "android",
+  "checks": [
+    {
+      "name": "Real SQLite save failure and unsuccessful retry remain visible with pending position intact",
+      "passed": true
+    },
+    {
+      "name": "After removing the failure, the retry button commits pending state and removes the warning",
+      "passed": true
+    }
+  ],
+  "failedRetry": {
+    "platform": "android",
+    "blocked": true,
+    "retries": 1,
+    "warningVisible": true,
+    "persisted": false,
+    "pendingStateRetained": true
+  },
+  "successfulRetry": {
+    "platform": "android",
+    "blocked": false,
+    "retries": 2,
+    "warningVisible": false,
+    "persisted": true,
+    "pendingStateRetained": true
+  },
+  "passed": true
+}

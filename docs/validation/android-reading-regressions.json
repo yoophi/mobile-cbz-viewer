@@ -1,0 +1,244 @@
+{
+  "reading": {
+    "platform": "android",
+    "checks": [
+      {
+        "name": "v4-to-v5 migration preserves ready pages, geometry, cover and original with default reading settings",
+        "passed": true,
+        "details": {
+          "schemaVersion": 5,
+          "ready": true,
+          "pageCount": 3,
+          "coverPresent": true,
+          "defaultSettings": true,
+          "sourceCount": 1,
+          "preservedPages": true
+        }
+      },
+      {
+        "name": "Page, source fraction, mode, direction and timestamp survive database reopen",
+        "passed": true
+      },
+      {
+        "name": "Reading state is isolated per book and stores no sandbox file URI",
+        "passed": true
+      },
+      {
+        "name": "Relative archive path survives stale URI and missing cache; reduced page count clamps the saved anchor",
+        "passed": true
+      },
+      {
+        "name": "Actual SQLite failure rejects save, publishes a retryable warning and preserves persisted data",
+        "passed": true
+      },
+      {
+        "name": "Retry commits the newest failed state and clears the shared warning",
+        "passed": true
+      },
+      {
+        "name": "Serialized rapid saves restore the newest state rather than an older in-flight write",
+        "passed": true
+      },
+      {
+        "name": "Cache eviction and regeneration preserve durable reading state",
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "scroll-cache": {
+    "platform": "android",
+    "checks": [
+      {
+        "name": "128 MiB reservation evicts the oldest unleased strips, protects active strips and keeps newer cache",
+        "passed": true
+      },
+      {
+        "name": "Pinned saturation fails without exceeding the cache cap or deleting active strips/source files",
+        "passed": true
+      },
+      {
+        "name": "Released pressure permits regeneration from the original extracted page",
+        "passed": true
+      },
+      {
+        "name": "Cancellation after native strip output waits for settlement and removes unpublished staging only",
+        "passed": true
+      },
+      {
+        "name": "Interrupted long page regenerates all 30 strips without affecting other cache or original",
+        "passed": true
+      },
+      {
+        "name": "Reopening removes abandoned owned scroll staging while preserving ready pages and source archive",
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "library": {
+    "platform": "android",
+    "checks": [
+      {
+        "name": "v1 migration preserves metadata and restores relative source path",
+        "passed": true
+      },
+      {
+        "name": "Validated CBZ commits ready state and three image files",
+        "passed": true
+      },
+      {
+        "name": "Non-image entries are never extracted; original remains",
+        "passed": true
+      },
+      {
+        "name": "Corrupt CBZ retains original and retryable error without cache output",
+        "passed": true
+      },
+      {
+        "name": "Pre-cancel retains original source",
+        "passed": true
+      },
+      {
+        "name": "Cancel during native extraction settles before cleanup and retains original",
+        "passed": true,
+        "detail": "{\"progressEvents\":5,\"cancelled\":true,\"status\":\"stored\",\"cacheExists\":false,\"sourceExists\":true}"
+      },
+      {
+        "name": "Retry after native cancellation completes",
+        "passed": true
+      },
+      {
+        "name": "Reject traversal without extraction or loss of original",
+        "passed": true
+      },
+      {
+        "name": "Reject symlink without extraction or loss of original",
+        "passed": true
+      },
+      {
+        "name": "Reject imageless without extraction or loss of original",
+        "passed": true
+      },
+      {
+        "name": "Reject bomb without extraction or loss of original",
+        "passed": true
+      },
+      {
+        "name": "Reject empty without extraction or loss of original",
+        "passed": true
+      },
+      {
+        "name": "Reject forged-size without extraction or loss of original",
+        "passed": true
+      },
+      {
+        "name": "Restart removes staging/uncommitted final cache and restores retryable state",
+        "passed": true
+      },
+      {
+        "name": "Retry after interruption completes",
+        "passed": true
+      },
+      {
+        "name": "Purged extraction cache is recoverable after restart",
+        "passed": true
+      },
+      {
+        "name": "Missing source resets ready state and removes stale extraction cache",
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "pages": {
+    "platform": "android",
+    "checks": [
+      {
+        "name": "v2-to-v3 migration preserves book/source metadata and requires new page cache",
+        "passed": true
+      },
+      {
+        "name": "Mixed PNG/WebP/JPEG pages sorted naturally; hidden entries excluded",
+        "passed": true
+      },
+      {
+        "name": "All three image formats decode from local files",
+        "passed": true
+      },
+      {
+        "name": "First-page JPEG cover saved and decodable within size budget",
+        "passed": true
+      },
+      {
+        "name": "Page order and sizes persist after reopening database",
+        "passed": true
+      },
+      {
+        "name": "Decoder failure becomes a cover warning without crashing the library",
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "cache": {
+    "platform": "android",
+    "checks": [
+      {
+        "name": "Pressure evicts old cache, protects active reader, preserves originals",
+        "passed": true
+      },
+      {
+        "name": "Manual cleanup keeps active reader and removes other cache/page metadata",
+        "passed": true
+      },
+      {
+        "name": "Evicted pages and cover regenerate from original on open",
+        "passed": true
+      },
+      {
+        "name": "Uncommitted cache folders are removed before capacity accounting",
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "dimensions": {
+    "platform": "android",
+    "checks": [
+      {
+        "name": "v3 ready book, cover, order and original are preserved during v4 migration",
+        "passed": true
+      },
+      {
+        "name": "Bounded file header backfill obtains PNG/JPEG/WebP ratios and EXIF rotation",
+        "passed": true
+      },
+      {
+        "name": "Header geometry matches native normalized image dimensions",
+        "passed": true
+      },
+      {
+        "name": "Geometry persists across reopen; corrupt metadata remains nonfatal and nullable",
+        "passed": true
+      },
+      {
+        "name": "Published PNG bands survive staging cleanup and normalize JPEG EXIF orientation",
+        "passed": true
+      },
+      {
+        "name": "Shared source job creates 30 bounded strips covering a 512x30000 image without gaps",
+        "passed": true
+      },
+      {
+        "name": "Missing strip regenerates the complete atomic page cache while original survives",
+        "passed": true
+      },
+      {
+        "name": "Unreferenced queued work cancels before native decode and preserves published files",
+        "passed": true
+      }
+    ],
+    "passed": true
+  }
+}
