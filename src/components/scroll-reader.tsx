@@ -1,6 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { Image } from 'expo-image';
+import { GestureDetector } from 'react-native-gesture-handler';
+import { ZoomCanvas, type ZoomScrollControls } from './zoom-canvas';
 import { acquireScrollPage, type ComicPage } from '@/services/library';
 import { buildScrollLayout, scrollOffsetAtPosition, scrollPositionAtOffset, scrollRowAtOffset,
   type ReadingPosition, type ScrollLayout, type ScrollRow } from '@/utils/scroll-layout';
@@ -33,10 +35,10 @@ const Band = memo(function Band({ page, row, width, active, repair }: {
   </View>;
 });
 
-function ScrollBody({ pages, layout, width, height, position, navigation, onPosition, repair }: {
+function ScrollBody({ pages, layout, width, height, position, navigation, onPosition, repair, scrollGesture, scrollEnabled }: {
   pages: ComicPage[]; layout: ScrollLayout; width: number; height: number;
   position: ReadingPosition; navigation: ReadingPosition; onPosition: (value: ReadingPosition) => void; repair: () => void;
-}) {
+} & ZoomScrollControls) {
   const list = useRef<FlatList<ScrollRow>>(null);
   const [initialOffset] = useState(() => scrollOffsetAtPosition(layout, position));
   const [initialIndex] = useState(() => scrollRowAtOffset(layout, initialOffset));
@@ -72,14 +74,14 @@ function ScrollBody({ pages, layout, width, height, position, navigation, onPosi
   const getItemLayout = useCallback((_data: ArrayLike<ScrollRow> | null | undefined, index: number) =>
     ({ index, offset: layout.rows[index].offset, length: layout.rows[index].length }), [layout]);
   const lastPage = layout.pages[layout.pages.length - 1];
-  return <FlatList ref={list} data={layout.rows} keyExtractor={(row) => `${row.pageIndex}:${row.part}`}
+  return <GestureDetector gesture={scrollGesture}><FlatList ref={list} data={layout.rows} keyExtractor={(row) => `${row.pageIndex}:${row.part}`}
     renderItem={renderItem} getItemLayout={getItemLayout} initialScrollIndex={initialIndex}
     initialNumToRender={2} maxToRenderPerBatch={2} updateCellsBatchingPeriod={30} windowSize={3}
-    removeClippedSubviews={false} scrollEventThrottle={100} onScroll={onScroll}
+    removeClippedSubviews={false} scrollEnabled={scrollEnabled} scrollEventThrottle={100} onScroll={onScroll}
     onScrollBeginDrag={() => { pending.current = undefined; }}
     onContentSizeChange={() => { if (!initialized.current) { initialized.current = true; move(initialOffset); } }}
     ListFooterComponent={<View style={{ height: Math.max(0, height - (lastPage?.length ?? height)) }} />}
-    accessibilityLabel="세로 스크롤 만화" style={styles.list} />;
+    accessibilityLabel="세로 스크롤 만화" style={styles.list} /></GestureDetector>;
 }
 
 function SizedScroll({ pages, width, height, ...props }: {
@@ -90,7 +92,10 @@ function SizedScroll({ pages, width, height, ...props }: {
     try { return { layout: buildScrollLayout(pages, width) }; }
     catch (cause) { return { error: cause instanceof Error ? cause.message : '스크롤 모드를 준비하지 못했습니다.' }; }
   }, [pages, width]);
-  return result.layout ? <ScrollBody pages={pages} layout={result.layout} width={width} height={height} {...props} />
+  const layout = result.layout;
+  return layout ? <ZoomCanvas resetKey={`${props.navigation.index}:${props.navigation.fraction}`}>
+    {(controls) => <ScrollBody pages={pages} layout={layout} width={width} height={height} {...props} {...controls} />}
+    </ZoomCanvas>
     : <Text accessibilityRole="alert" style={styles.error}>{result.error}</Text>;
 }
 

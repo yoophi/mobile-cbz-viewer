@@ -49,3 +49,5 @@ python3 scripts/verify-android-scroll.py --book-id 4
 #8은 iOS 실행 검증과 장시간/저메모리/실기기 캐시 압박 검증이 남아 진행 중이다. Xcode 라이선스 승인 전에는 iOS 네이티브 실행을 검증할 수 없다. iOS 번들 성공으로 이를 대신하지 않는다. PNG/WebP의 EXIF 회전, 애니메이션 이미지, 생성 중 프로세스 종료와 네이티브 임시 출력 잔여 파일도 추가 확인이 필요하다. #7의 플랫폼별 메모리·캐시 검증도 함께 유지한다.
 
 API 근거: [Expo SDK 57 Image](https://docs.expo.dev/versions/v57.0.0/sdk/image/), [ImageManipulator](https://docs.expo.dev/versions/v57.0.0/sdk/imagemanipulator/), [React Native 0.86 FlatList](https://reactnative.dev/docs/0.86/flatlist).
+
+페이지·스크롤 확대의 우선순위와 새 Android 검증은 [확대 진행 기록](page-zoom.md)을 참고하세요. 확대 구현 후 개발 앱의 PSS가 기존450 MiB 기준을 초과한 관찰이 있어 #7·#9의 메모리 검증은 추가 비교가 필요합니다. 비트맵 관찰만으로 전체 메모리가 통과했다고 판정하지 않습니다.

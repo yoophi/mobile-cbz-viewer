@@ -5,8 +5,10 @@
     "zoomed one-finger drag stays inside viewport bounds",
     "double tap zoom/reset and explicit reset",
     "repeated pinch saturates at 4x without leaving bounds",
+    "three-pointer add/remove keeps bounded zoom active",
     "pinch and edge drag do not change real reader page",
+    "three-pointer add/remove does not change real reader page",
     "explicit page navigation resets zoom"
   ],
-  "passed": 6
+  "passed": 8
 }

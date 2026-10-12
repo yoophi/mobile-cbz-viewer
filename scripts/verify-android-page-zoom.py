@@ -27,8 +27,8 @@ def probe():
                 return json.loads(label[5:]), bounds(node)
         time.sleep(.3)
     raise AssertionError('Gesture diagnostic is not ready')
-def pinch(start, end):
-    adb('shell', 'CLASSPATH=/data/local/tmp/cbz-touch.dex', 'app_process', '/system/bin', 'TouchProbe', *start, *end)
+def pinch(start, end, third=False):
+    adb('shell', 'CLASSPATH=/data/local/tmp/cbz-touch.dex', 'app_process', '/system/bin', 'TouchProbe', *start, *end, *(['--third'] if third else []))
     time.sleep(.2)
 def check_bounds(value, size):
     assert 1 <= value['scale'] <= 4
@@ -63,6 +63,9 @@ checks.append('double tap zoom/reset and explicit reset')
 for _ in range(3): pinch(start,end)
 data,_=probe(); check_bounds(data['value'],data['size']); assert data['value']['scale']==4
 checks.append('repeated pinch saturates at 4x without leaving bounds')
+tap('확대 초기화'); pinch(start,end,third=True)
+data,_=probe(); check_bounds(data['value'],data['size']); assert data['value']['scale']>1
+checks.append('three-pointer add/remove keeps bounded zoom active')
 route('reader/1')
 ui=nodes()
 if any(n.get('content-desc')=='열람 모드: 세로 스크롤' for n in ui): tap('열람 모드: 세로 스크롤')
@@ -73,6 +76,10 @@ adb('shell','input','swipe',500,1000,30,1500,200)
 ui=nodes(); assert any(n.get('text')==page_label for n in ui)
 assert any(n.get('content-desc')=='확대 초기화' for n in ui)
 checks.append('pinch and edge drag do not change real reader page')
+pinch([440,1000,640,1000],[240,1000,840,1000],third=True)
+ui=nodes(); assert any(n.get('text')==page_label for n in ui)
+assert any(n.get('content-desc')=='확대 초기화' for n in ui)
+checks.append('three-pointer add/remove does not change real reader page')
 # The sample has three pages; choose an enabled navigation button by current index/direction.
 button=next(n for n in ui if n.get('clickable')=='true' and n.get('enabled')=='true' and
     n.get('content-desc') in ['다음 →','← 다음','이전 →','← 이전'])

@@ -1,0 +1,52 @@
+{
+  "platform": "Android emulator API36",
+  "developmentBuild": true,
+  "samples": [
+    {
+      "stage": "fresh library",
+      "pssKiB": 508993,
+      "nativeHeapPssKiB": 287480,
+      "bitmapCount": 5,
+      "bitmapKiB": 1354
+    },
+    {
+      "stage": "scroll before zoom",
+      "pssKiB": 580158,
+      "nativeHeapPssKiB": 349836,
+      "bitmapCount": 10,
+      "bitmapKiB": 25674
+    },
+    {
+      "stage": "pinch zoom",
+      "pssKiB": 581056,
+      "nativeHeapPssKiB": 355286,
+      "bitmapCount": 10,
+      "bitmapKiB": 25674
+    },
+    {
+      "stage": "after 5 zoom/reset cycles",
+      "pssKiB": 585689,
+      "nativeHeapPssKiB": 357182,
+      "bitmapCount": 10,
+      "bitmapKiB": 25674
+    },
+    {
+      "stage": "after 10 zoom/reset cycles",
+      "pssKiB": 588283,
+      "nativeHeapPssKiB": 357914,
+      "bitmapCount": 10,
+      "bitmapKiB": 25674
+    },
+    {
+      "stage": "after 20 zoom/reset cycles",
+      "pssKiB": 572518,
+      "nativeHeapPssKiB": 361277,
+      "bitmapCount": 10,
+      "bitmapKiB": 25674
+    }
+  ],
+  "referencePssBudgetKiB": 460800,
+  "withinReferencePssBudget": false,
+  "referenceBitmapBudgetKiB": 32768,
+  "withinReferenceBitmapBudget": true
+}

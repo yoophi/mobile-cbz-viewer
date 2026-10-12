@@ -16,7 +16,8 @@ public class TouchProbe {
       properties[i] = new MotionEvent.PointerProperties(); properties[i].id = i;
       properties[i].toolType = MotionEvent.TOOL_TYPE_FINGER;
       coordinates[i] = new MotionEvent.PointerCoords();
-      coordinates[i].x = i == 0 ? x1 : x2; coordinates[i].y = i == 0 ? y1 : y2;
+      coordinates[i].x = i == 0 ? x1 : i == 1 ? x2 : (x1+x2)/2;
+      coordinates[i].y = i == 0 ? y1 : i == 1 ? y2 : (y1+y2)/2+150;
       coordinates[i].pressure = 1; coordinates[i].size = 1;
     }
     MotionEvent event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, count,
@@ -25,7 +26,9 @@ public class TouchProbe {
     finally { event.recycle(); }
   }
   public static void main(String[] args) throws Exception {
-    if (args.length != 8) throw new IllegalArgumentException("start x1 y1 x2 y2, end x1 y1 x2 y2");
+    if (args.length != 8 && !(args.length == 9 && args[8].equals("--third")))
+      throw new IllegalArgumentException("start x1 y1 x2 y2, end x1 y1 x2 y2 [--third]");
+    boolean third = args.length == 9;
     Class<?> manager = Class.forName("android.hardware.input.InputManagerGlobal");
     input = manager.getMethod("getInstance").invoke(null);
     inject = manager.getMethod("injectInputEvent", InputEvent.class, int.class);
@@ -35,12 +38,15 @@ public class TouchProbe {
     send(MotionEvent.ACTION_POINTER_DOWN | (1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT), p[0], p[1], p[2], p[3], 2);
     for (int i = 1; i <= 30; i++) {
       float t = i / 30f;
-      send(MotionEvent.ACTION_MOVE, p[0]+(p[4]-p[0])*t, p[1]+(p[5]-p[1])*t,
-        p[2]+(p[6]-p[2])*t, p[3]+(p[7]-p[3])*t, 2);
+      float x1=p[0]+(p[4]-p[0])*t, y1=p[1]+(p[5]-p[1])*t;
+      float x2=p[2]+(p[6]-p[2])*t, y2=p[3]+(p[7]-p[3])*t;
+      if (third && i == 10) send(MotionEvent.ACTION_POINTER_DOWN | (2 << MotionEvent.ACTION_POINTER_INDEX_SHIFT), x1,y1,x2,y2,3);
+      if (third && i == 20) send(MotionEvent.ACTION_POINTER_UP | (2 << MotionEvent.ACTION_POINTER_INDEX_SHIFT), x1,y1,x2,y2,3);
+      send(MotionEvent.ACTION_MOVE, x1,y1,x2,y2,third && i >= 10 && i < 20 ? 3 : 2);
       SystemClock.sleep(16);
     }
     send(MotionEvent.ACTION_POINTER_UP | (1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT), p[4], p[5], p[6], p[7], 2);
     send(MotionEvent.ACTION_UP, p[4], p[5], p[6], p[7], 1);
-    System.out.println("Injected 34 two-pointer events");
+    System.out.println("Injected " + (third ? 36 : 34) + " multi-pointer events");
   }
 }
