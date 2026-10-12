@@ -52,6 +52,19 @@ npx expo export --platform ios --platform android --output-dir dist
 
 초기 구성에서 타입 검사·린트·Expo 진단·양 플랫폼 JS 번들 생성을 확인합니다. 네이티브 앱 실행 및 실제 기기의 파일 가져오기·재시작·회전 동작은 별도 검증해야 합니다. 번들 생성은 네이티브 컴파일이나 실기기 검증을 대신하지 않습니다.
 
+## 작업 관리 (td)
+
+`td`의 GitHub Issues 저장소를 사용하며, 대상은 `origin`의 [yoophi/mobile-cbz-viewer](https://github.com/yoophi/mobile-cbz-viewer/issues)입니다. `td`와 GitHub CLI(`gh`)를 설치하고 GitHub 인증을 완료한 뒤 프로젝트 루트에서 초기화합니다.
+
+```sh
+td init --store=gh-issue
+td config list
+td doctor
+td --refresh list
+```
+
+초기화는 기존 데이터를 자동으로 이전하지 않습니다. 새 작업 환경에서도 위 명령으로 연결을 설정하고 확인하세요. 인증 정보와 로컬 상태·캐시는 커밋하지 않습니다.
+
 ## 구조
 
 - `src/app/`: Expo Router 화면 및 앱 레이아웃
