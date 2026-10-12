@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+# td local configuration, session state, and caches
+.todos/
+
 # Expo
 .expo/
 dist/
