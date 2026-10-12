@@ -29,6 +29,7 @@ javac -source 8 -target 8 -cp "$ANDROID_HOME/platforms/android-36/android.jar" -
 adb push /tmp/cbz-touch/dex/classes.dex /data/local/tmp/cbz-touch.dex
 python3 scripts/verify-android-page-zoom.py
 python3 scripts/verify-android-scroll-zoom.py
+python3 scripts/verify-android-active-zoom-rotation.py
 ```
 
 페이지 검증 스크립트는 개발 빌드의 `zoom-diagnostics` 화면에서 동일한 ZoomCanvas를 실제 입력으로 조작합니다. 합성 화면의 뷰포트와 종료 시점 변환을 읽어 초점·경계를 확인합니다. 추가로 직접 생성한 reader-sample 책(id 1)을 열어 확대·가장자리 드래그 후 페이지 유지와 버튼 이동 후 초기화를 확인합니다. 사용자 책을 대상으로 실행하지 마세요. 개발 앱을 새로 실행해 초기 진단 상태를 만든 뒤 실행해야 합니다. 앱 업데이트 적용 여부가 불확실하면 같은 검증 결과를 재사용하지 말고 새 앱 실행으로 확인합니다.
@@ -72,9 +73,15 @@ Android arm64 릴리스 APK 빌드도 시작했으나 아직 완료되지 않았
 
 수정 소스를 새로 실행한 Android 개발 APK·최적화 JS에서 기존 제스처15개와 추가 회전6개, 총21개 검증이 통과했습니다. 페이지 내부 위치에서 가로·세로 회전 후 저장 좌표가 그대로 유지되며, 회전 후 일반 스크롤도 재개됐습니다. [원시 결과](validation/android-scroll-zoom-rotation.json). 타입 검사·린트·42개 모델 테스트·iOS/Android JS 번들 생성도 통과했습니다. 이는 확대 동작이 끝난 상태에서 회전한 검증이며, 손가락 입력이 진행 중인 회전과 릴리스 네이티브 실행은 별도 범위입니다.
 
+## 입력이 진행 중인 회전
+
+추가된 검증 도구는 실제 스크롤 뷰포트 경계를 읽어 두 손가락 입력을 보냅니다. `TouchProbe --slow`는 각 이동 사이100ms를 기다리고5번째 이동 직후 표식을 출력합니다. 이 시점부터 손가락을 떼기까지 최소2.5초가 남습니다. 검증은 표식 이후 회전을 요청하고 Android WindowManager의 실제 화면 회전 값이 바뀌었음을 확인합니다. 입력 프로세스가 살아 있고 표식 이후2.5초 이내에 변경된 경우만 입력 중 회전으로 인정합니다.
+
+Android 개발 APK·최적화 JS에서 추가7개 검증이 통과했습니다. 두 방향 모두 회전이 입력 중에 적용됐고, 확대 초기화와 SQLite의 페이지·내부 위치·모드·방향 보존, 이후 일반 스크롤 재개를 확인했습니다. 실패한 경우에도 기기의 회전 설정을 복원합니다. [원시 관찰](validation/android-active-zoom-rotation.json). 이 결과는 스크롤 모드의 Android 검증이며 페이지 모드 입력 중 회전, iOS·실기기·릴리스 실행과 관성 스크롤 중 확대는 별도 범위입니다.
+
 ## 남은 범위
 
-- 스크롤 관성 동작 중 확대 시작 및 회전 중 조작의 추가 네이티브 검증
+- 스크롤 관성 동작 중 확대 시작 및 페이지 모드 입력 중 회전의 추가 네이티브 검증
 - 큰 이미지 확대 시 화질·메모리 측정
 - iOS 실제 실행과 iPhone/iPad 검증
 

@@ -26,9 +26,13 @@ public class TouchProbe {
     finally { event.recycle(); }
   }
   public static void main(String[] args) throws Exception {
-    if (args.length != 8 && !(args.length == 9 && args[8].equals("--third")))
-      throw new IllegalArgumentException("start x1 y1 x2 y2, end x1 y1 x2 y2 [--third]");
-    boolean third = args.length == 9;
+    if (args.length < 8) throw new IllegalArgumentException("start x1 y1 x2 y2, end x1 y1 x2 y2 [--third] [--slow]");
+    boolean third = false, slow = false;
+    for (int i = 8; i < args.length; i++) {
+      if (args[i].equals("--third")) third = true;
+      else if (args[i].equals("--slow")) slow = true;
+      else throw new IllegalArgumentException("Unknown flag: " + args[i]);
+    }
     Class<?> manager = Class.forName("android.hardware.input.InputManagerGlobal");
     input = manager.getMethod("getInstance").invoke(null);
     inject = manager.getMethod("injectInputEvent", InputEvent.class, int.class);
@@ -43,7 +47,10 @@ public class TouchProbe {
       if (third && i == 10) send(MotionEvent.ACTION_POINTER_DOWN | (2 << MotionEvent.ACTION_POINTER_INDEX_SHIFT), x1,y1,x2,y2,3);
       if (third && i == 20) send(MotionEvent.ACTION_POINTER_UP | (2 << MotionEvent.ACTION_POINTER_INDEX_SHIFT), x1,y1,x2,y2,3);
       send(MotionEvent.ACTION_MOVE, x1,y1,x2,y2,third && i >= 10 && i < 20 ? 3 : 2);
-      SystemClock.sleep(16);
+      if (slow && i == 5) {
+        System.out.println("ACTIVE_TWO_POINTERS"); System.out.flush();
+      }
+      SystemClock.sleep(slow ? 100 : 16);
     }
     send(MotionEvent.ACTION_POINTER_UP | (1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT), p[4], p[5], p[6], p[7], 2);
     send(MotionEvent.ACTION_UP, p[4], p[5], p[6], p[7], 1);

@@ -1,0 +1,54 @@
+{
+  "platform": "Android emulator API36",
+  "passed": 7,
+  "checks": [
+    "rotation 1 occurs while two-pointer stream is still live",
+    "rotation 1 cancels active zoom",
+    "rotation 1 preserves exact source anchor and settings",
+    "rotation 0 occurs while two-pointer stream is still live",
+    "rotation 0 cancels active zoom",
+    "rotation 0 preserves exact source anchor and settings",
+    "one-finger scroll resumes after mid-gesture rotations"
+  ],
+  "observations": [
+    {
+      "rotation": 1,
+      "before": {
+        "index": 6,
+        "fraction": 0.24814834677143494,
+        "mode": "scroll",
+        "direction": "rtl"
+      },
+      "after": {
+        "index": 6,
+        "fraction": 0.24814834677143494,
+        "mode": "scroll",
+        "direction": "rtl"
+      },
+      "displayChangedDuringLiveStream": true,
+      "displayChangedAfterMarkerMs": 133.1
+    },
+    {
+      "rotation": 0,
+      "before": {
+        "index": 6,
+        "fraction": 0.24814834677143494,
+        "mode": "scroll",
+        "direction": "rtl"
+      },
+      "after": {
+        "index": 6,
+        "fraction": 0.24814834677143494,
+        "mode": "scroll",
+        "direction": "rtl"
+      },
+      "displayChangedDuringLiveStream": true,
+      "displayChangedAfterMarkerMs": 281.1
+    }
+  ],
+  "appSourceCommit": "99592650ae408f0ae4516d2b1a403a045fd7fa4f",
+  "nativeBuild": "existing Android development APK",
+  "jsMode": "production (--no-dev --minify)",
+  "inputHelper": "TouchProbe --slow, marker at step5 with at least25 remaining100ms sleeps before pointer UP",
+  "scope": "Own synthetic40-page book, scroll mode. Active two-pointer stream during both display rotations, exact read-only SQLite anchors. Native release/iOS/physical and page-mode active-touch rotation not covered."
+}
