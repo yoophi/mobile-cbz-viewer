@@ -143,6 +143,23 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
     return pages.map((page) => ({ ...page, uri: new File(extractedRoot(), String(id), 'pages', page.path).uri }));
   }
 
+  async function openComic(id: number, signal?: AbortSignal): Promise<{ comic: Comic; pages: ComicPage[] }> {
+    const db = await getDatabase();
+    let comic = await db.getFirstAsync<Comic>('SELECT * FROM comics WHERE id = ?', id);
+    if (!comic) throw new ComicArchiveError('서재 항목을 찾을 수 없습니다.');
+    checkCancelled(signal);
+    if (!comicFile(comic).exists) throw new ComicArchiveError('원본 파일이 없습니다. 서재에서 다시 가져와 주세요.');
+    let pages = comic.status === 'ready' ? await listPages(id) : [];
+    if (comic.status !== 'ready' || !pages.length || pages.some((page) => !new File(page.uri).exists)) {
+      await prepareComic(id, signal);
+      comic = (await db.getFirstAsync<Comic>('SELECT * FROM comics WHERE id = ?', id))!;
+      pages = await listPages(id);
+    }
+    checkCancelled(signal);
+    if (!pages.length) throw new ComicArchiveError('열람할 페이지가 없습니다. 파일을 확인해 주세요.');
+    return { comic, pages };
+  }
+
   async function importComic(asset: DocumentPickerAsset): Promise<Comic> {
     const source = new File(asset.uri);
     let destination: File | undefined;
@@ -253,11 +270,11 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
     } finally { preparing = false; }
   }
 
-  return { listComics, listPages, importComic, prepareComic, dispose: async () => {
+  return { listComics, listPages, openComic, importComic, prepareComic, dispose: async () => {
     if (preparing) throw new Error('Extraction is still running');
     if (database) await (await database).closeAsync();
     database = undefined;
   } };
 }
 
-export const { listComics, listPages, importComic, prepareComic } = createLibraryStore();
+export const { listComics, listPages, openComic, importComic, prepareComic } = createLibraryStore();

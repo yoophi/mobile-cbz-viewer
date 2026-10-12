@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
@@ -15,14 +16,14 @@ export default function LibraryScreen() {
   const operation = useRef(Platform.OS !== 'web');
   const supported = Platform.OS !== 'web';
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     let active = true;
     if (!supported) return;
     listComics().then((items) => { if (active) setComics(items); })
       .catch(() => { if (active) setError('라이브러리를 불러오지 못했습니다. 앱을 다시 실행해 주세요.'); })
       .finally(() => { if (active) { operation.current = false; setBusy(false); } });
     return () => { active = false; };
-  }, [supported]);
+  }, [supported]));
 
   useEffect(() => () => { controller.current?.abort(); }, []);
 
@@ -85,7 +86,7 @@ export default function LibraryScreen() {
         </Pressable> : null}
         {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
         <Text style={styles.notice}>{supported
-          ? 'CBZ의 구조와 이미지 데이터를 확인한 뒤 안전하게 압축을 풉니다. 만화 열람 화면은 개발 예정입니다.'
+          ? 'CBZ의 구조와 이미지 데이터를 확인한 뒤 안전하게 압축을 풉니다. 준비된 만화를 눌러 열람하세요.'
           : '웹은 화면 미리보기용입니다. 파일 가져오기는 iOS·Android 개발 빌드에서 사용할 수 있습니다.'}</Text>
         <Text style={styles.section}>보관한 파일 · {comics.length}</Text>
         <FlatList data={comics} keyExtractor={(item) => String(item.id)}
@@ -99,6 +100,10 @@ export default function LibraryScreen() {
                 ? `열람 준비됨 · ${item.pageCount} 페이지` : item.status === 'extracting' ? '검증·추출 중' : '원본 보관됨'}</Text>
               {item.error ? <Text accessibilityRole="alert" style={styles.error}>{item.error}</Text> : null}
               {item.coverError ? <Text style={styles.metadata}>{item.coverError}</Text> : null}
+              {item.status === 'ready' ? <Pressable accessibilityRole="button" accessibilityLabel={`${item.name} 열기`}
+                disabled={busy} accessibilityState={{ disabled: busy }}
+                onPress={() => router.push({ pathname: '/reader/[id]', params: { id: String(item.id) } })}
+                style={[styles.retry, busy && styles.disabled]}><Text style={styles.buttonText}>만화 열기</Text></Pressable> : null}
               {item.status !== 'ready' ? <Pressable accessibilityRole="button" accessibilityLabel={`${item.name} 검증 및 추출`}
                 disabled={busy} accessibilityState={{ disabled: busy }} onPress={() => retryComic(item.id)}
                 style={[styles.retry, busy && styles.disabled]}><Text style={styles.buttonText}>검증·추출 다시 시도</Text></Pressable> : null}
