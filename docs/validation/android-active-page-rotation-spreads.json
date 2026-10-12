@@ -1,0 +1,108 @@
+{
+  "platform": "Android emulator API36, development APK/development JS",
+  "sourceBaseCommit": "d6d6275d0aadf0548af57ad57d719be9820ef7fc",
+  "sourceChanges": [
+    "src/components/comic-reader.tsx",
+    "src/utils/page-spread.ts"
+  ],
+  "passed": 22,
+  "checks": [
+    "ltr rotation1: display changes during two-pointer stream",
+    "ltr rotation1: active zoom resets",
+    "ltr rotation1: exact SQLite anchor and settings remain",
+    "ltr rotation1: displayed page matches saved anchor",
+    "ltr rotation0: display changes during two-pointer stream",
+    "ltr rotation0: active zoom resets",
+    "ltr rotation0: exact SQLite anchor and settings remain",
+    "ltr rotation0: displayed page matches saved anchor",
+    "ltr: zoom resumes after active rotations",
+    "ltr: reset remains usable",
+    "ltr: page navigation resumes with base zoom",
+    "rtl rotation1: display changes during two-pointer stream",
+    "rtl rotation1: active zoom resets",
+    "rtl rotation1: exact SQLite anchor and settings remain",
+    "rtl rotation1: displayed page matches saved anchor",
+    "rtl rotation0: display changes during two-pointer stream",
+    "rtl rotation0: active zoom resets",
+    "rtl rotation0: exact SQLite anchor and settings remain",
+    "rtl rotation0: displayed page matches saved anchor",
+    "rtl: zoom resumes after active rotations",
+    "rtl: reset remains usable",
+    "rtl: page navigation resumes with base zoom"
+  ],
+  "observations": [
+    {
+      "direction": "ltr",
+      "rotation": 1,
+      "before": {
+        "index": 2,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "ltr"
+      },
+      "after": {
+        "index": 2,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "ltr"
+      },
+      "displayChangedDuringLiveStream": true,
+      "displayChangedAfterMarkerMs": 166.3
+    },
+    {
+      "direction": "ltr",
+      "rotation": 0,
+      "before": {
+        "index": 2,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "ltr"
+      },
+      "after": {
+        "index": 2,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "ltr"
+      },
+      "displayChangedDuringLiveStream": true,
+      "displayChangedAfterMarkerMs": 147.3
+    },
+    {
+      "direction": "rtl",
+      "rotation": 1,
+      "before": {
+        "index": 1,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "rtl"
+      },
+      "after": {
+        "index": 1,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "rtl"
+      },
+      "displayChangedDuringLiveStream": true,
+      "displayChangedAfterMarkerMs": 152.5
+    },
+    {
+      "direction": "rtl",
+      "rotation": 0,
+      "before": {
+        "index": 1,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "rtl"
+      },
+      "after": {
+        "index": 1,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "rtl"
+      },
+      "displayChangedDuringLiveStream": true,
+      "displayChangedAfterMarkerMs": 141.1
+    }
+  ],
+  "scope": "Actual page reader, read-only SQLite snapshots; iOS/physical/release not verified"
+}

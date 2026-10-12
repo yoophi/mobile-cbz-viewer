@@ -1,0 +1,33 @@
+{
+  "platform": "Android emulator API36",
+  "passed": 21,
+  "checks": [
+    "base one-finger scroll changes source position",
+    "two-finger moving pinch activates zoom without scrolling",
+    "zoom remains active after drag (540, 1450) to (540, 600)",
+    "zoom remains active after drag (540, 600) to (30, 1650)",
+    "zoom remains active after drag (900, 1400) to (1050, 300)",
+    "zoomed vertical and edge drags preserve source position",
+    "adding and removing third finger preserves source position and zoom",
+    "explicit reset returns to base scale",
+    "one-finger scrolling resumes after reset",
+    "scroll mode double-tap zoom activates",
+    "double-tap zoom also locks native scrolling",
+    "double-tap reset restores scrolling scale",
+    "explicit scroll page navigation resets zoom and moves to requested page",
+    "mode change resets zoom",
+    "return to scroll keeps source anchor with base zoom",
+    "rotation probe starts inside a source page",
+    "landscape rotation resets scroll zoom",
+    "landscape rotation preserves source anchor and settings",
+    "portrait rotation resets landscape zoom",
+    "portrait rotation preserves source anchor and settings",
+    "native scrolling resumes after rotation restoration"
+  ],
+  "sourceBaseCommit": "d6d6275d0aadf0548af57ad57d719be9820ef7fc",
+  "sourceChanges": [
+    "src/components/comic-reader.tsx",
+    "src/utils/page-spread.ts"
+  ],
+  "jsMode": "development JS in development APK"
+}

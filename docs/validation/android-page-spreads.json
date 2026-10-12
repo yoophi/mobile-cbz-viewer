@@ -1,0 +1,603 @@
+{
+  "platform": "Android API36 emulator with display overrides; development APK/development JS",
+  "sourceBaseCommit": "d6d6275d0aadf0548af57ad57d719be9820ef7fc",
+  "sourceChanges": [
+    "comic-reader.tsx adaptive spread/compact controls",
+    "page-spread.ts"
+  ],
+  "passed": 14,
+  "checks": [
+    "narrow window shows the selected second body page alone",
+    "large portrait viewport shows body spread",
+    "single to spread preserves exact saved second-page anchor",
+    "large landscape keeps both pages and exact anchor",
+    "RTL reverses visual pair without changing anchor",
+    "narrow window returns to the exact selected page",
+    "short window exposes all controls with 48dp touch height",
+    "short window keeps a usable single page and exact anchor",
+    "previous from restored second page reaches solitary cover",
+    "native forward traversal shows all40 pages once",
+    "remaining unpaired final page stands alone",
+    "next is disabled at final page",
+    "RTL previous from final page reaches the preceding full pair",
+    "RTL next returns to the solitary final page"
+  ],
+  "observations": [
+    {
+      "layout": "large portrait",
+      "shown": {
+        "order": [
+          1,
+          2
+        ],
+        "counter": "2–3 / 40",
+        "bounds": [
+          [
+            0,
+            337,
+            1184,
+            2979
+          ],
+          [
+            1216,
+            337,
+            2400,
+            2979
+          ]
+        ]
+      },
+      "anchor": {
+        "index": 2,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "ltr"
+      }
+    },
+    {
+      "layout": "large landscape RTL",
+      "shown": {
+        "order": [
+          2,
+          1
+        ],
+        "counter": "2–3 / 40",
+        "bounds": [
+          [
+            211,
+            263,
+            1890,
+            1758
+          ],
+          [
+            1921,
+            263,
+            3600,
+            1758
+          ]
+        ]
+      },
+      "anchor": {
+        "index": 2,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "rtl"
+      }
+    },
+    {
+      "layout": "320dp narrow/short window",
+      "shown": {
+        "order": [
+          2
+        ],
+        "counter": "3 / 40",
+        "bounds": [
+          [
+            0,
+            263,
+            840,
+            722
+          ]
+        ]
+      },
+      "buttons": [
+        [
+          32,
+          137,
+          206,
+          263
+        ],
+        [
+          21,
+          743,
+          374,
+          869
+        ],
+        [
+          395,
+          743,
+          751,
+          869
+        ],
+        [
+          145,
+          890,
+          332,
+          1016
+        ],
+        [
+          395,
+          890,
+          582,
+          1016
+        ]
+      ],
+      "anchor": {
+        "index": 2,
+        "fraction": 0.0,
+        "mode": "page",
+        "direction": "rtl"
+      }
+    },
+    {
+      "layout": "large portrait traversal",
+      "spreads": [
+        {
+          "order": [
+            1,
+            2
+          ],
+          "counter": "2–3 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            3,
+            4
+          ],
+          "counter": "4–5 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            5,
+            6
+          ],
+          "counter": "6–7 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            7,
+            8
+          ],
+          "counter": "8–9 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            9,
+            10
+          ],
+          "counter": "10–11 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            11,
+            12
+          ],
+          "counter": "12–13 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            13,
+            14
+          ],
+          "counter": "14–15 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            15,
+            16
+          ],
+          "counter": "16–17 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            17,
+            18
+          ],
+          "counter": "18–19 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            19,
+            20
+          ],
+          "counter": "20–21 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            21,
+            22
+          ],
+          "counter": "22–23 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            23,
+            24
+          ],
+          "counter": "24–25 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            25,
+            26
+          ],
+          "counter": "26–27 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            27,
+            28
+          ],
+          "counter": "28–29 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            29,
+            30
+          ],
+          "counter": "30–31 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            31,
+            32
+          ],
+          "counter": "32–33 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            33,
+            34
+          ],
+          "counter": "34–35 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            35,
+            36
+          ],
+          "counter": "36–37 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            37,
+            38
+          ],
+          "counter": "38–39 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              1184,
+              2979
+            ],
+            [
+              1216,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        },
+        {
+          "order": [
+            39
+          ],
+          "counter": "40 / 40",
+          "bounds": [
+            [
+              0,
+              337,
+              2400,
+              2979
+            ]
+          ]
+        }
+      ],
+      "seen": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ]
+    }
+  ],
+  "scope": "Responsive layout on simulated window sizes; not native iPad/Android tablet or physical/release verification"
+}

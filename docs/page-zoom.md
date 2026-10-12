@@ -1,8 +1,18 @@
-# 페이지·스크롤 확대 진행 기록
+# 페이지·스크롤 확대와 화면 크기 대응
 
-이 기록은 #9의 페이지·세로 스크롤 확대 구현을 설명합니다. #9는 iOS 실행과 실기기 검증이 남아 진행 중입니다.
+이 기록은 #9의 페이지·세로 스크롤 확대와 #12의 페이지 배치를 설명합니다. iOS 실행과 실기기·릴리스 검증이 남아 두 작업 모두 진행 중입니다.
 
 ## 동작
+
+페이지 모드는 SafeArea 내부의 실제 표시 영역 폭을 사용합니다. 폭732dp 이상에서는 한 페이지당 최소360dp와12dp 간격을 확보해 본문 두 페이지를 표시합니다. 첫 페이지는 표지로 단독 표시하고, 본문은 0 기반(1,2), (3,4) 순서로 묶습니다. 표지를 제외한 본문이 홀수 개이면 마지막 한 페이지도 단독 표시합니다. 단독 페이지는 표시 영역 전체에 맞춰 가운데 정렬합니다. 좌→우는 작은 페이지 번호를 왼쪽에, 우→좌는 오른쪽에 배치합니다.
+
+창 크기 변경은 보이는 페이지 묶음만 바꾸며 저장된 원본 페이지·내부 위치를 변경하지 않습니다. 두 번째 페이지를 보던 중 넓어진 경우에도 그 페이지가 묶음에 포함되고, 다시 좁아지면 같은 페이지 하나를 표시합니다. 넓은 화면의 이전·다음은 묶음 단위로 이동하며 표지와 마지막 페이지의 경계를 지킵니다. 읽기 방향 변경과 각 이미지 영역 크기 변경은 확대를 초기화합니다. 각 페이지는 자신의 영역 안에서 확대·이동하며 동시에 최대 두 이미지만 표시합니다.
+
+SafeArea 내부 높이가520dp 미만이면 하단 조작을 줄바꿈 가능한 행으로 배치합니다. 버튼의 최소 터치 높이48dp를 유지하며 페이지 표시 공간을 확보합니다. 기기 종류나 고정 화면 방향으로 레이아웃을 선택하지 않습니다.
+
+Android API36 에뮬레이터의 크기만 변경하고 표시 밀도는420으로 유지한 검증14개가 통과했습니다. 작은 창의 모든 버튼과 한 페이지 표시, 큰 세로·가로 창의 짝 배치, 원본 위치 보존, 실제40페이지의 누락·중복 없는 이동과 마지막 단독 페이지를 확인했습니다. 이는 실제 iPad나 Android 태블릿의 실행 근거가 아니라 가용 창 크기에 대한 근거입니다. [창 크기 결과](validation/android-page-spreads.json).
+
+새 컨테이너에서 기존 스크롤·확대·회전 회귀21개와 페이지 입력 중 회전22개도 통과했습니다. 회전 후 표시 페이지가 저장된 페이지를 포함하고, 표시 범위와 이미지 목록이 일치하는지 검사합니다. [스크롤 회귀](validation/android-scroll-zoom-spreads.json), [페이지 회전](validation/android-active-page-rotation-spreads.json). 타입 검사·린트·48개 모델 테스트·iOS/Android JS 번들 생성이 통과했습니다. 모델 테스트는1–101페이지 책의 양방향 순회에서 누락·중복 없는 짝 배치와 크기 변경 시 원본 위치 유지를 확인합니다. 두 이미지의 실제 메모리와 iPad·Android 태블릿·릴리스·큰 글꼴 접근성 검증은 남아 있습니다.
 
 설치된 Gesture Handler 2.32와 Reanimated 4.5를 사용합니다. 앱 루트에 GestureHandlerRootView를 두고, 현재 페이지의 이미지만 UI 스레드에서 변환합니다. 핀치 확대 범위는 1–4배입니다. 더블 탭은 터치한 지점을 기준으로 2.5배 확대하거나 기본 배율로 복원합니다. 확대 중에는 한 손가락으로 이동하고, 표시 중인 이미지의 contain 크기와 뷰포트에 따라 이동 범위를 제한합니다. 확대된 이미지가 화면보다 작은 축은 가운데에 유지합니다.
 
@@ -31,6 +41,7 @@ python3 scripts/verify-android-page-zoom.py
 python3 scripts/verify-android-scroll-zoom.py
 python3 scripts/verify-android-active-zoom-rotation.py
 python3 scripts/verify-android-active-page-rotation.py --port 8084 --output docs/validation/android-active-page-rotation.json
+python3 scripts/verify-android-page-spreads.py --port 8084 --output docs/validation/android-page-spreads.json
 python3 scripts/verify-android-fling-zoom.py --port 8084 --output docs/validation/android-fling-zoom.json
 ```
 
@@ -103,6 +114,7 @@ Android 개발 APK·개발 JS에서 세 번의 반복, 총15개 검증이 통과
 
 - 페이지·스크롤 입력 중 회전과 관성 중 확대의 iOS·실기기·릴리스 검증
 - 큰 이미지 확대 시 화질·메모리 측정
+- 두 페이지 표시의 iPad 창 크기 변경과 실제 Android 태블릿, 두 이미지의 메모리 측정
 - iOS 실제 실행과 iPhone/iPad 검증
 
 iOS JS 번들 생성은 iOS 네이티브 제스처 검증을 대신하지 않습니다. 현재 Xcode 라이선스 미동의로 시뮬레이터 실행이 막혀 있습니다.

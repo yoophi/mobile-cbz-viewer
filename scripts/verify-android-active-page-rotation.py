@@ -18,6 +18,7 @@ def adb(*values):
 def nodes():
     for _ in range(3):
         try:
+            adb('shell', 'rm', '-f', '/sdcard/cbz-page-rotation.xml')
             adb('shell', 'uiautomator', 'dump', '/sdcard/cbz-page-rotation.xml')
             return list(ET.fromstring(adb('shell', 'cat', '/sdcard/cbz-page-rotation.xml')).iter('node'))
         except (subprocess.CalledProcessError, ET.ParseError):
@@ -143,9 +144,12 @@ try:
             check(f'{direction} rotation{target}: exact SQLite anchor and settings remain', after == baseline)
             canvas()
             ui = nodes()
+            counters = [re.fullmatch(r'(\d+)(?:–(\d+))? / 3', n.get('text', '')) for n in ui]
+            counter = next(match for match in counters if match)
+            first, last = int(counter[1]), int(counter[2] or counter[1])
+            shown = [int(n.get('content-desc').split()[0]) for n in ui if re.fullmatch(r'[1-3] 페이지', n.get('content-desc', ''))]
             check(f'{direction} rotation{target}: displayed page matches saved anchor',
-                  any(n.get('content-desc') == f"{baseline['index']+1} 페이지" for n in ui)
-                  and any(n.get('text') == f"{baseline['index']+1} / 3" for n in ui))
+                  baseline['index']+1 in shown and sorted(shown) == list(range(first, last+1)))
         cx, cy, _ = canvas()
         adb('shell', f'input tap {cx} {cy}; input tap {cx} {cy}')
         check(f'{direction}: zoom resumes after active rotations', zoomed() and saved() == baseline)
@@ -166,7 +170,9 @@ finally:
             adb('shell', 'settings', 'put', 'system', key, value)
 
 result = {'platform': 'Android emulator API36, development APK/development JS',
-          'sourceCommit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+          'sourceBaseCommit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+          'sourceChanges': sorted(set(subprocess.check_output(['git', 'diff', '--name-only', 'HEAD', '--', 'src'], text=True).splitlines()
+                                     + subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard', 'src'], text=True).splitlines())),
           'passed': len(checks), 'checks': checks, 'observations': observations,
           'scope': 'Actual page reader, read-only SQLite snapshots; iOS/physical/release not verified'}
 args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n')
