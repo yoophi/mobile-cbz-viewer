@@ -1,0 +1,74 @@
+{
+  "platform": "android",
+  "checks": [
+    {
+      "name": "v1 migration preserves metadata and restores relative source path",
+      "passed": true
+    },
+    {
+      "name": "Validated CBZ commits ready state and three image files",
+      "passed": true
+    },
+    {
+      "name": "Non-image entries are never extracted; original remains",
+      "passed": true
+    },
+    {
+      "name": "Corrupt CBZ retains original and retryable error without cache output",
+      "passed": true
+    },
+    {
+      "name": "Pre-cancel retains original source",
+      "passed": true
+    },
+    {
+      "name": "Cancel during native extraction settles before cleanup and retains original",
+      "passed": true
+    },
+    {
+      "name": "Retry after native cancellation completes",
+      "passed": true
+    },
+    {
+      "name": "Reject traversal without extraction or loss of original",
+      "passed": true
+    },
+    {
+      "name": "Reject symlink without extraction or loss of original",
+      "passed": true
+    },
+    {
+      "name": "Reject imageless without extraction or loss of original",
+      "passed": true
+    },
+    {
+      "name": "Reject bomb without extraction or loss of original",
+      "passed": true
+    },
+    {
+      "name": "Reject empty without extraction or loss of original",
+      "passed": true
+    },
+    {
+      "name": "Reject forged-size without extraction or loss of original",
+      "passed": true
+    },
+    {
+      "name": "Restart removes staging/uncommitted final cache and restores retryable state",
+      "passed": true
+    },
+    {
+      "name": "Retry after interruption completes",
+      "passed": true
+    },
+    {
+      "name": "Purged extraction cache is recoverable after restart",
+      "passed": true
+    },
+    {
+      "name": "Missing source resets ready state and removes stale extraction cache",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

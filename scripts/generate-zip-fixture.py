@@ -35,5 +35,31 @@ source = (
     f'export const fixturePaths = {json.dumps(paths, ensure_ascii=False)};\n'
     f'export const imageBytes = {array(image)};\n'
 )
+hostile = []
+for label, name, content, attrs in [
+    ('traversal', '../escape.png', image, 0o100644),
+    ('symlink', 'link.png', b'../../escape.png', 0o120777),
+    ('imageless', 'notes.txt', b'no image', 0o100644),
+    ('bomb', '1.png', b'\0' * 100000, 0o100644),
+]:
+    sample = io.BytesIO()
+    with zipfile.ZipFile(sample, 'w') as output:
+        entry = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+        entry.compress_type = zipfile.ZIP_DEFLATED
+        entry.external_attr = attrs << 16
+        output.writestr(entry, content)
+    hostile.append((label, sample.getvalue()))
+empty = io.BytesIO()
+with zipfile.ZipFile(empty, 'w'):
+    pass
+hostile.append(('empty', empty.getvalue()))
+forged = bytearray(archive.getvalue())
+directory_offset = struct.unpack_from('<I', forged, len(forged) - 6)[0]
+struct.pack_into('<I', forged, directory_offset + 24, 1)
+struct.pack_into('<I', forged, 22, 1)
+hostile.append(('forged-size', forged))
+source += 'export const hostileFixtures = [\n' + ''.join(
+    f'  {{ name: {json.dumps(label)}, bytes: {array(data)} }},\n' for label, data in hostile
+) + '];\n'
 root = Path(__file__).resolve().parent.parent
 (root / 'src/diagnostics/zip-fixture.ts').write_text(source, encoding='utf-8')
