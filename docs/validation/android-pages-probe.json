@@ -1,0 +1,30 @@
+{
+  "platform": "android",
+  "checks": [
+    {
+      "name": "v2-to-v3 migration preserves book/source metadata and requires new page cache",
+      "passed": true
+    },
+    {
+      "name": "Mixed PNG/WebP/JPEG pages sorted naturally; hidden entries excluded",
+      "passed": true
+    },
+    {
+      "name": "All three image formats decode from local files",
+      "passed": true
+    },
+    {
+      "name": "First-page JPEG cover saved and decodable within size budget",
+      "passed": true
+    },
+    {
+      "name": "Page order and sizes persist after reopening database",
+      "passed": true
+    },
+    {
+      "name": "Decoder failure becomes a cover warning without crashing the library",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

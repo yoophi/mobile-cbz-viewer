@@ -12,7 +12,7 @@ export async function runLibraryProbe() {
   const staging = new Directory(Paths.cache, 'diagnostic-staging');
   const extracted = new Directory(Paths.cache, 'diagnostic-extracted');
   const sourceFolder = new Directory(Paths.cache, 'diagnostic-sources');
-  const checks: { name: string; passed: boolean }[] = [];
+  const checks: { name: string; passed: boolean; detail?: string }[] = [];
   const store = createLibraryStore(databaseName, 'diagnostic-comics', 'diagnostic');
   // This store is isolated from the user's library and contains only public synthetic samples.
   try { await deleteDatabaseAsync(databaseName); } catch { /* First run has no database. */ }
@@ -37,9 +37,9 @@ export async function runLibraryProbe() {
     const prepared = (await store.listComics())[0];
     const manifest = new File(extracted, String(prepared.id), 'manifest.json');
     checks.push({ name: 'Validated CBZ commits ready state and three image files', passed: prepared.status === 'ready' &&
-      prepared.pageCount === 3 && manifest.exists && new File(extracted, String(prepared.id), '한글 폴더/중첩/10.png').exists });
+      prepared.pageCount === 3 && manifest.exists && new File(extracted, String(prepared.id), 'pages', '한글 폴더/중첩/10.png').exists });
     checks.push({ name: 'Non-image entries are never extracted; original remains', passed:
-      !new File(extracted, String(prepared.id), 'notes.txt').exists && legacy.exists });
+      !new File(extracted, String(prepared.id), 'pages', 'notes.txt').exists && legacy.exists });
 
     const corrupt = new File(sourceFolder, 'corrupt.cbz');
     corrupt.write(fixtureBytes.slice(0, 40));
@@ -57,14 +57,16 @@ export async function runLibraryProbe() {
 
     const { subscribe } = await import('react-native-zip-archive');
     const activeController = new AbortController();
-    const subscription = subscribe(() => activeController.abort());
+    let progressEvents = 0;
+    const subscription = subscribe(() => { progressEvents++; activeController.abort(); });
     let cancelled = false;
     try { await store.prepareComic(migrated.id, activeController.signal); }
     catch { cancelled = activeController.signal.aborted; }
     finally { subscription.remove(); }
     const cancelledComic = (await store.listComics()).find((comic) => comic.id === migrated.id)!;
     checks.push({ name: 'Cancel during native extraction settles before cleanup and retains original', passed:
-      cancelled && cancelledComic.status === 'stored' && !new Directory(extracted, String(migrated.id)).exists && legacy.exists });
+      cancelled && cancelledComic.status === 'stored' && !new Directory(extracted, String(migrated.id)).exists && legacy.exists,
+      detail: JSON.stringify({ progressEvents, cancelled, status: cancelledComic.status, cacheExists: new Directory(extracted, String(migrated.id)).exists, sourceExists: legacy.exists }) });
     await store.prepareComic(migrated.id);
     checks.push({ name: 'Retry after native cancellation completes', passed: (await store.listComics()).find((comic) => comic.id === migrated.id)?.status === 'ready' });
 

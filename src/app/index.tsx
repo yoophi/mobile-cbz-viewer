@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
+import { ComicCover } from '@/components/comic-cover';
 
 import { importComic, listComics, prepareComic, type Comic } from '@/services/library';
 
@@ -92,10 +93,12 @@ export default function LibraryScreen() {
           ListEmptyComponent={!busy ? <Text style={styles.empty}>아직 보관한 만화가 없습니다.</Text> : null}
           renderItem={({ item }) => (
             <View style={styles.card}>
+              <ComicCover uri={item.coverUri} name={item.name} />
               <Text style={styles.filename}>{item.name}</Text>
               <Text style={styles.metadata}>{(item.size / 1024 / 1024).toFixed(1)} MB · {item.status === 'ready'
                 ? `열람 준비됨 · ${item.pageCount} 페이지` : item.status === 'extracting' ? '검증·추출 중' : '원본 보관됨'}</Text>
               {item.error ? <Text accessibilityRole="alert" style={styles.error}>{item.error}</Text> : null}
+              {item.coverError ? <Text style={styles.metadata}>{item.coverError}</Text> : null}
               {item.status !== 'ready' ? <Pressable accessibilityRole="button" accessibilityLabel={`${item.name} 검증 및 추출`}
                 disabled={busy} accessibilityState={{ disabled: busy }} onPress={() => retryComic(item.id)}
                 style={[styles.retry, busy && styles.disabled]}><Text style={styles.buttonText}>검증·추출 다시 시도</Text></Pressable> : null}

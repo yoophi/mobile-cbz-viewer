@@ -23,7 +23,8 @@
     },
     {
       "name": "Cancel during native extraction settles before cleanup and retains original",
-      "passed": true
+      "passed": true,
+      "detail": "{\"progressEvents\":3,\"cancelled\":true,\"status\":\"stored\",\"cacheExists\":false,\"sourceExists\":true}"
     },
     {
       "name": "Retry after native cancellation completes",
