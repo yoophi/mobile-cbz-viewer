@@ -1,0 +1,47 @@
+{
+  "platform": "android",
+  "api": "36",
+  "checks": [
+    {
+      "name": "First viewport renders without preparing the whole chapter",
+      "passed": true
+    },
+    {
+      "name": "Vertical swipes advance the shared current-page counter",
+      "passed": true
+    },
+    {
+      "name": "Page to scroll and back preserves the current page",
+      "passed": true
+    },
+    {
+      "name": "Landscape and portrait keep the same current page",
+      "passed": true
+    },
+    {
+      "name": "Final long page remains accessible and scrolls across its image bands",
+      "passed": true
+    }
+  ],
+  "samples": [
+    {
+      "stage": "first screen",
+      "pssKiB": 402408,
+      "bitmapKiB": 17088,
+      "renderedSourcePages": 7
+    },
+    {
+      "stage": "after swipe and rotation",
+      "pssKiB": 429664,
+      "bitmapKiB": 25674,
+      "renderedSourcePages": 7
+    },
+    {
+      "stage": "long final page",
+      "pssKiB": 398145,
+      "bitmapKiB": 19292,
+      "renderedSourcePages": 7
+    }
+  ],
+  "passed": true
+}
