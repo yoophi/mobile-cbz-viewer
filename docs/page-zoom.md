@@ -120,7 +120,23 @@ Android 개발 APK·개발 JS에서 세 번의 반복, 총15개 검증이 통과
 
 현재 활성 텍스트 색상과 배경의 sRGB 상대 휘도 대비는 최소7.25:1입니다. 일반 텍스트/배경16.71:1, 버튼 텍스트/배경11.09:1, 설명/카드7.25:1, 가져오기 버튼9.63:1, 오류/카드8.91:1을 계산했습니다. 비활성 버튼과 이미지 콘텐츠는 이 텍스트 대비 계산에서 제외했습니다.
 
-하단 컨테이너 변경 후 기존 Android 스크롤·확대·회전21개도 통과했습니다. [회귀 결과](validation/android-scroll-zoom-accessibility.json). 타입 검사·린트·48개 기존 모델 테스트·iOS/Android JS 번들 생성은 통과했습니다. TalkBack 실조작은 초기 권한 대화상자와 UI 조회 도구의 서비스 상태 영향 때문에 아직 검증하지 못했습니다. 별도 조회 도구의 shell 실행도 종료137로 실패해 통과 근거로 사용하지 않습니다. 접근성 서비스 설정은 복원했습니다. 시스템 애니메이션 감소의 실제 전환과 iOS 탈출 제스처도 네이티브 검증이 남아 있습니다. #13은 진행 중으로 유지합니다.
+하단 컨테이너 변경 후 기존 Android 스크롤·확대·회전21개도 통과했습니다. [회귀 결과](validation/android-scroll-zoom-accessibility.json). 타입 검사·린트·48개 기존 모델 테스트·iOS/Android JS 번들 생성은 통과했습니다. 시스템 애니메이션 감소의 실제 전환과 iOS 탈출 제스처도 네이티브 검증이 남아 있습니다. #13은 진행 중으로 유지합니다.
+
+## Android TalkBack 조작과 순서
+
+API36 Pixel9 에뮬레이터에서 실제 TalkBack을 켜고 직접 만든3페이지 책(id1)을 사용해11개 검증을 통과했습니다. 책 열기, 현재 페이지·전체 수 안내, 이전 페이지 이동 후 실제 이미지와 페이지 안내 변경, 책 제목의 제목 역할, 순차 초점 이동, 열람 모드·읽기 방향 변경, 서재 복귀, 책 열기에서 다음 항목 제스처로 삭제 버튼 접근, 삭제 확인 후 취소를 확인했습니다. [초점·조작 원시 결과](validation/android-talkback.json). 책 제목에서 다음 항목 제스처를 반복하면 현재 페이지 이미지 → 모드 → 방향 → 현재 페이지 안내 → 왼쪽 이동 → 오른쪽 이동 순으로 접근합니다. 시작 초점은 접근성 동작으로 지정하고 이후 이동은 실제 TalkBack 제스처로 실행했습니다.
+
+`AccessibilityProbe.java`는 shell 테스트 도구입니다. 앱의 권한·네이티브 모듈을 변경하지 않습니다. 메인 Looper를 준비하고 `FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES`로 조회하여 TalkBack을 유지합니다. Android의 일반 입력 주입은 접근성 입력 필터를 우회하므로, 이 검증에서는 API36 테스트 API `injectInputEventToInputFilter`에 더블 탭과 다음 항목 스와이프를 보냅니다. 대상의 실제 접근성 초점과 서비스 연결을 확인한 후 동작을 검증합니다. 초기 Looper 누락과 이미 초점이 있는 항목 처리, 서재 갱신 중 초점 확인으로 실패했던 실행은 통과 근거에서 제외했습니다. 서재 복귀 후에는 버튼 활성화를 기다리고, 책 열기에서 다음 항목 제스처로 삭제 버튼에 접근합니다. 관련 동작은 [Android UiAutomation 소스](https://github.com/aosp-mirror/platform_frameworks_base/blob/android16-release/core/java/android/app/UiAutomation.java)를 참고했습니다.
+
+```sh
+mkdir -p /tmp/cbz-a11y/classes /tmp/cbz-a11y/dex
+javac -source 8 -target 8 -cp "$ANDROID_HOME/platforms/android-36/android.jar" -d /tmp/cbz-a11y/classes scripts/android/AccessibilityProbe.java
+"$ANDROID_HOME/build-tools/36.0.0/d8" --lib "$ANDROID_HOME/platforms/android-36/android.jar" --output /tmp/cbz-a11y/dex /tmp/cbz-a11y/classes/AccessibilityProbe.class
+adb push /tmp/cbz-a11y/dex/classes.dex /data/local/tmp/cbz-accessibility.dex
+python3 scripts/verify-android-talkback.py --output docs/validation/android-talkback.json
+```
+
+현재 개발 JS를 제공하는 Metro8084, 정상 크기1080×2424px·밀도420·글꼴1배의 에뮬레이터가 필요합니다. SQLite 읽기 전용 복사본으로 합성 책을 확인하고 시작 위치·모드·방향은 정상 UI로 맞춥니다. 접근성 서비스 설정은 실패 시에도 복원합니다. 최초 TalkBack 알림 권한 대화상자는 거절할 수 있습니다. 원본 책은 삭제하지 않으며 삭제 확정·파일 가져오기, 큰 글꼴/태블릿/릴리스에서의 TalkBack, 실제 음성 출력·VoiceOver를 검증한 결과는 아닙니다. 기존 전체 플랫폼·메모리 검증도 남아 있습니다.
 
 ## 남은 범위
 
