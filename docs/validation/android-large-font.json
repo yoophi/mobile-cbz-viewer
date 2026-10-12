@@ -1,0 +1,57 @@
+{
+  "sourceBaseCommit": "751bbc6749f8391d61ce6e2d1120a4c95f5d8aef",
+  "sourceChanges": [
+    "src/app/index.tsx",
+    "src/components/comic-reader.tsx",
+    "src/app/_layout.tsx",
+    "src/hooks/use-reduced-motion.ts"
+  ],
+  "checks": [
+    "Large-font short library scroll reaches sample open control",
+    "Reader retains visible image viewport with 2x font in short window",
+    "Scrollable toolbar exposes mode and direction at large font",
+    "Scrollable toolbar exposes current page and navigation",
+    "App stays foreground after toolbar scroll",
+    "Android hardware back returns to library after opening a book"
+  ],
+  "observations": [
+    {
+      "fontScale": 2,
+      "window": "840x1100",
+      "pages": [
+        {
+          "index": "0",
+          "text": "",
+          "resource-id": "",
+          "class": "android.widget.ImageView",
+          "package": "com.yoophi.mobilecbzviewer",
+          "content-desc": "3 페이지",
+          "checkable": "false",
+          "checked": "false",
+          "clickable": "false",
+          "enabled": "true",
+          "focusable": "false",
+          "focused": "false",
+          "scrollable": "false",
+          "long-clickable": "false",
+          "password": "false",
+          "selected": "false",
+          "bounds": "[0,304][840,587]",
+          "drawing-order": "2",
+          "hint": ""
+        }
+      ],
+      "toolbarLabels": [
+        "",
+        "3 페이지",
+        "Tools",
+        "← 다음",
+        "서재로",
+        "열람 모드: 페이지",
+        "이전 →",
+        "읽기 방향: 우→좌",
+        "현재 3 페이지, 전체 3 페이지"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
@@ -120,14 +120,15 @@ export function ComicReader({ id }: { id?: number }) {
   const last = mode === 'page' ? spread?.last ?? index : index;
   const counter = count ? first === last ? `${first + 1} / ${count}` : `${first + 1}–${last + 1} / ${count}` : '— / —';
   const compact = screenSize.height > 0 && screenSize.height < 520;
-  return <SafeAreaView style={styles.screen}>
+  const returnToLibrary = useCallback(() => router.dismissTo('/'), []);
+  return <SafeAreaView style={styles.screen} onAccessibilityEscape={returnToLibrary}>
     <View style={styles.screen} onLayout={({ nativeEvent: { layout } }) => {
       setScreenSize((previous) => previous.width === layout.width && previous.height === layout.height
         ? previous : { width: layout.width, height: layout.height });
     }}>
     <View style={styles.header}>
-      <ReaderButton label="서재로" onPress={() => router.canGoBack() ? router.back() : router.replace('/')} />
-      <Text numberOfLines={1} style={styles.title}>{book?.comic.name ?? '만화 열람'}</Text>
+      <ReaderButton label="서재로" onPress={returnToLibrary} />
+      <Text accessibilityRole="header" numberOfLines={1} style={styles.title}>{book?.comic.name ?? '만화 열람'}</Text>
     </View>
     <ReadingSaveNotice id={id} />
     <View style={styles.viewport} onLayout={({ nativeEvent: { layout } }) => setPageWidth((previous) => previous === layout.width ? previous : layout.width)}>
@@ -142,12 +143,15 @@ export function ComicReader({ id }: { id?: number }) {
             page={book!.pages[visibleIndex]} repair={repair} direction={direction} />)}
         </View> : null : null}
     </View>
-    <View style={[styles.controls, compact && styles.compactControls]}>
+    <ScrollView style={[styles.toolbar, screenSize.height > 0 && { maxHeight: screenSize.height * 0.5 }]}
+      contentContainerStyle={[styles.controls, compact && styles.compactControls]}>
       <ReaderButton label={`열람 모드: ${mode === 'page' ? '페이지' : '세로 스크롤'}`} disabled={busy || !!error || !count}
         onPress={() => { setNavigation(position); updateReading({ mode: mode === 'page' ? 'scroll' : 'page' }, true); }} />
       <ReaderButton label={`읽기 방향: ${direction === 'ltr' ? '좌→우' : '우→좌'}`}
         disabled={busy || !!error || !count} onPress={() => updateReading({ direction: direction === 'ltr' ? 'rtl' : 'ltr' }, true)} />
-      <Text accessibilityLiveRegion="polite" style={styles.text}>{counter}</Text>
+      <Text accessibilityLiveRegion="polite" accessibilityLabel={count
+        ? `현재 ${index + 1} 페이지, 전체 ${count} 페이지${first !== last ? `, 화면에 ${first + 1}부터 ${last + 1} 페이지` : ''}`
+        : '페이지 없음'} style={styles.text}>{counter}</Text>
       <View style={styles.row}>{(['left', 'right'] as const).map((side) => {
         const action = physicalPageAction(side, direction);
         return <ReaderButton key={side} label={`${side === 'left' ? '← ' : ''}${action === 'next' ? '다음' : '이전'}${side === 'right' ? ' →' : ''}`}
@@ -158,7 +162,7 @@ export function ComicReader({ id }: { id?: number }) {
             updateReading(next, true); setNavigation(next);
           }} />;
       })}</View>
-    </View>
+    </ScrollView>
     </View>
   </SafeAreaView>;
 }
@@ -177,6 +181,7 @@ const styles = StyleSheet.create({
   overlay: { position: 'absolute', inset: 0, backgroundColor: '#101724', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
   error: { color: '#ffb4b4', padding: 16, lineHeight: 22, textAlign: 'center' },
   controls: { padding: 12, gap: 8 },
+  toolbar: { flexGrow: 0, flexShrink: 1 },
   compactControls: { padding: 8, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: 24 },
 });

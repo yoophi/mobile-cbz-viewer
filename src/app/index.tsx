@@ -94,27 +94,29 @@ export default function LibraryScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.content}>
-        <Text style={styles.eyebrow}>MOBILE CBZ VIEWER</Text>
-        <Text style={styles.title}>나의 만화 서재</Text>
-        <ReadingSaveNotice />
-        <Text style={styles.description}>아이폰 · 아이패드 · 안드로이드를 위한 오프라인 만화 리더 프로젝트</Text>
-        <Pressable accessibilityRole="button" accessibilityState={{ disabled: busy || !supported }}
-          disabled={busy || !supported} onPress={() => { void pickComic(); }}
-          style={[styles.button, (busy || !supported) && styles.disabled]}>
-          <Text style={styles.buttonText}>{busy ? '불러오는 중…' : 'CBZ 파일 가져오기'}</Text>
-        </Pressable>
-        {busy ? <ActivityIndicator color="#9abfff" style={styles.loader} /> : null}
-        {processing ? <Pressable accessibilityRole="button" onPress={() => controller.current?.abort()} style={styles.cancel}>
-          <Text style={styles.filename}>추출 취소 · 원본 보관</Text>
-        </Pressable> : null}
-        {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
-        {notice ? <Text accessibilityRole="alert" style={styles.notice}>{notice}</Text> : null}
-        <Text style={styles.notice}>{supported
-          ? 'CBZ의 구조와 이미지 데이터를 확인한 뒤 안전하게 압축을 풉니다. 준비된 만화를 눌러 열람하세요.'
-          : '웹은 화면 미리보기용입니다. 파일 가져오기는 iOS·Android 개발 빌드에서 사용할 수 있습니다.'}</Text>
-        <Text style={styles.section}>보관한 파일 · {comics.length}</Text>
         <FlatList data={comics} keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.list}
+          ListHeaderComponent={<View>
+            <Text style={styles.eyebrow}>MOBILE CBZ VIEWER</Text>
+            <Text accessibilityRole="header" style={styles.title}>나의 만화 서재</Text>
+            <ReadingSaveNotice />
+            <Text style={styles.description}>아이폰 · 아이패드 · 안드로이드를 위한 오프라인 만화 리더 프로젝트</Text>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: busy || !supported }}
+              disabled={busy || !supported} onPress={() => { void pickComic(); }}
+              style={[styles.button, (busy || !supported) && styles.disabled]}>
+              <Text style={styles.buttonText}>{busy ? '불러오는 중…' : 'CBZ 파일 가져오기'}</Text>
+            </Pressable>
+            {busy ? <ActivityIndicator color="#9abfff" style={styles.loader} /> : null}
+            {processing ? <Pressable accessibilityRole="button" onPress={() => controller.current?.abort()} style={styles.cancel}>
+              <Text style={styles.filename}>추출 취소 · 원본 보관</Text>
+            </Pressable> : null}
+            {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
+            {notice ? <Text accessibilityRole="alert" style={styles.notice}>{notice}</Text> : null}
+            <Text style={styles.notice}>{supported
+              ? 'CBZ의 구조와 이미지 데이터를 확인한 뒤 안전하게 압축을 풉니다. 준비된 만화를 눌러 열람하세요.'
+              : '웹은 화면 미리보기용입니다. 파일 가져오기는 iOS·Android 개발 빌드에서 사용할 수 있습니다.'}</Text>
+            <Text accessibilityRole="header" style={styles.section}>보관한 파일 · {comics.length}</Text>
+          </View>}
           ListEmptyComponent={!busy ? <Text style={styles.empty}>아직 보관한 만화가 없습니다.</Text> : null}
           renderItem={({ item }) => (
             <View style={styles.card}>
