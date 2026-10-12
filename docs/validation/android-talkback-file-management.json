@@ -1,0 +1,215 @@
+{
+  "sourceCommit": "b41a9549fbb441ec8aefc7d4d4a9ce9c574a6114",
+  "checks": [
+    "TalkBack service bound during file-management flow",
+    "TalkBack next gesture reaches actionable owned file card",
+    "TalkBack system picker imports and prepares owned two-page CBZ",
+    "Imported source, both extracted pages and generated cover exist before deletion",
+    "Imported book reading state persisted through TalkBack navigation",
+    "TalkBack cancellation preserves new book and managed source",
+    "TalkBack confirmed deletion removes book, pages and reading state",
+    "Managed original, extraction and cover are removed after confirmed deletion",
+    "Existing library originals remain byte-identical",
+    "Document-provider source remains byte-identical"
+  ],
+  "observations": [
+    {
+      "action": "CBZ 파일 가져오기",
+      "focusedBeforeGesture": {
+        "text": "",
+        "content-desc": "CBZ 파일 가져오기",
+        "package": "com.yoophi.mobilecbzviewer",
+        "bounds": "[63,615][1017,761]",
+        "heading": false,
+        "visible": true,
+        "class": "android.widget.Button",
+        "accessibilityFocused": true,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": true
+      },
+      "serviceBoundAfterGesture": true
+    },
+    {
+      "action": "select talkback-file-management.cbz",
+      "focusedBeforeGesture": {
+        "text": "",
+        "content-desc": "",
+        "package": "com.google.android.documentsui",
+        "bounds": "[64,689][529,1290]",
+        "heading": false,
+        "visible": true,
+        "class": "androidx.cardview.widget.CardView",
+        "accessibilityFocused": true,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": true
+      },
+      "descendantCaption": {
+        "text": "talkback-file-management.cbz",
+        "content-desc": "",
+        "package": "com.google.android.documentsui",
+        "bounds": "[196,1175][497,1226]",
+        "heading": false,
+        "visible": true,
+        "class": "android.widget.TextView",
+        "accessibilityFocused": false,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": false
+      },
+      "serviceBoundAfterGesture": true
+    },
+    {
+      "importedFixtureId": 12,
+      "sourcePresent": true,
+      "sourceMatchesProvider": true,
+      "extractedPagesPresent": 2,
+      "coverPresent": true
+    },
+    {
+      "action": "talkback-file-management.cbz 열기",
+      "focusedBeforeGesture": {
+        "text": "",
+        "content-desc": "talkback-file-management.cbz 열기",
+        "package": "com.yoophi.mobilecbzviewer",
+        "bounds": "[110,1797][970,1923]",
+        "heading": false,
+        "visible": true,
+        "class": "android.widget.Button",
+        "accessibilityFocused": true,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": true
+      },
+      "serviceBoundAfterGesture": true
+    },
+    {
+      "action": "열람 도구 표시",
+      "focusedBeforeGesture": {
+        "text": "",
+        "content-desc": "열람 도구 표시",
+        "package": "com.yoophi.mobilecbzviewer",
+        "bounds": "[216,142][864,2424]",
+        "heading": false,
+        "visible": true,
+        "class": "android.widget.Button",
+        "accessibilityFocused": true,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": true
+      },
+      "serviceBoundAfterGesture": true
+    },
+    {
+      "action": "다음 페이지",
+      "focusedBeforeGesture": {
+        "text": "",
+        "content-desc": "다음 페이지",
+        "package": "com.yoophi.mobilecbzviewer",
+        "bounds": "[864,142][1080,2361]",
+        "heading": false,
+        "visible": true,
+        "class": "android.widget.Button",
+        "accessibilityFocused": true,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": true
+      },
+      "serviceBoundAfterGesture": true
+    },
+    {
+      "action": "서재로",
+      "focusedBeforeGesture": {
+        "text": "",
+        "content-desc": "서재로",
+        "package": "com.yoophi.mobilecbzviewer",
+        "bounds": "[21,142][159,258]",
+        "heading": false,
+        "visible": true,
+        "class": "android.widget.Button",
+        "accessibilityFocused": true,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": true
+      },
+      "serviceBoundAfterGesture": true
+    },
+    {
+      "action": "talkback-file-management.cbz 삭제",
+      "focusedBeforeGesture": {
+        "text": "",
+        "content-desc": "talkback-file-management.cbz 삭제",
+        "package": "com.yoophi.mobilecbzviewer",
+        "bounds": "[110,1991][970,2164]",
+        "heading": false,
+        "visible": true,
+        "class": "android.widget.Button",
+        "accessibilityFocused": true,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": true
+      },
+      "serviceBoundAfterGesture": true
+    },
+    {
+      "action": "취소",
+      "focusedBeforeGesture": {
+        "text": "취소",
+        "content-desc": "",
+        "package": "com.yoophi.mobilecbzviewer",
+        "bounds": "[642,1372][810,1514]",
+        "heading": false,
+        "visible": true,
+        "class": "android.widget.Button",
+        "accessibilityFocused": true,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": true
+      },
+      "serviceBoundAfterGesture": true
+    },
+    {
+      "action": "talkback-file-management.cbz 삭제",
+      "focusedBeforeGesture": {
+        "text": "",
+        "content-desc": "talkback-file-management.cbz 삭제",
+        "package": "com.yoophi.mobilecbzviewer",
+        "bounds": "[110,1991][970,2164]",
+        "heading": false,
+        "visible": true,
+        "class": "android.widget.Button",
+        "accessibilityFocused": true,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": true
+      },
+      "serviceBoundAfterGesture": true
+    },
+    {
+      "action": "삭제",
+      "focusedBeforeGesture": {
+        "text": "삭제",
+        "content-desc": "",
+        "package": "com.yoophi.mobilecbzviewer",
+        "bounds": "[810,1372][978,1514]",
+        "heading": false,
+        "visible": true,
+        "class": "android.widget.Button",
+        "accessibilityFocused": true,
+        "enabled": true,
+        "scrollable": false,
+        "clickable": true
+      },
+      "serviceBoundAfterGesture": true
+    }
+  ],
+  "fixture": "talkback-file-management.cbz",
+  "existingBooks": 4,
+  "scope": "API36 Pixel9 emulator; actual TalkBack input-filter activation; read-only SQLite and file/hash verification; no iOS/speech-output proof",
+  "workingTree": true,
+  "sourceFilesSha256": {
+    "scripts/android/AccessibilityProbe.java": "be58c6e2576293cd2aaf5841b965b74dde359cd38a6aeb3c97d3abebc0ce64f7",
+    "scripts/verify-android-talkback-file-management.py": "8b611d60f5a359ec679ad079f8d64b666ffaef860781495e9cd5e2aa0e899311"
+  }
+}

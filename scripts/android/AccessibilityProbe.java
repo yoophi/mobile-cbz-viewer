@@ -13,6 +13,7 @@ import org.json.JSONObject;
 public class AccessibilityProbe {
  static boolean focusedOnce=false;
  static boolean focusConfirmed=false;
+ static Rect focusedBounds=null;
  static void walk(AccessibilityNodeInfo n,JSONArray out,String focus) throws Exception {
   if(n==null)return;
   Rect r=new Rect();n.getBoundsInScreen(r);
@@ -24,6 +25,7 @@ public class AccessibilityProbe {
    for(int i=0;i<10&&!n.isAccessibilityFocused();i++){Thread.sleep(50);n.refresh();}
    focusConfirmed=n.isAccessibilityFocused();
   }
+  if(n.isAccessibilityFocused())focusedBounds=new Rect(r);
   out.put(new JSONObject().put("text",text).put("content-desc",desc).put("package",String.valueOf(n.getPackageName())).put("bounds","["+r.left+","+r.top+"]["+r.right+","+r.bottom+"]").put("heading",n.isHeading()).put("visible",n.isVisibleToUser()).put("class",String.valueOf(n.getClassName())).put("accessibilityFocused",n.isAccessibilityFocused()).put("enabled",n.isEnabled()).put("scrollable",n.isScrollable()).put("clickable",n.isClickable()));
   for(int i=0;i<n.getChildCount();i++)walk(n.getChild(i),out,focus);
  }
@@ -38,14 +40,28 @@ public class AccessibilityProbe {
    AccessibilityNodeInfo root=null;
    for(int i=0;i<20&&root==null;i++){root=ui.getRootInActiveWindow();if(root==null)Thread.sleep(100);}
    if(root==null)throw new IllegalStateException("No active accessibility window");
-   JSONArray out=new JSONArray();walk(root,out,args.length>0&&!args[0].equals("--next")?args[0]:null);
-   if(args.length>1&&args[1].equals("--double-tap")) {
+   boolean focusedTap=args.length>0&&args[0].equals("--double-tap-focused");
+   JSONArray out=new JSONArray();walk(root,out,args.length>0&&!args[0].equals("--next")&&!focusedTap?args[0]:null);
+   if(focusedTap) {
+    int count=0;
+    for(int i=0;i<out.length();i++) {
+     JSONObject node=out.getJSONObject(i);
+     if(node.getBoolean("accessibilityFocused")) {
+      if(!node.getBoolean("clickable")||!node.getBoolean("enabled"))throw new IllegalStateException("Focused target is not actionable");
+      count++;
+     }
+    }
+    if(count!=1)throw new IllegalStateException("Exactly one focused target required");
+    focusConfirmed=true;
+   }
+   if(focusedTap||(args.length>1&&args[1].equals("--double-tap"))) {
     if(!focusConfirmed)throw new IllegalStateException("Target is not accessibility focused");
+    if(focusedBounds==null||focusedBounds.isEmpty())throw new IllegalStateException("Focused target needs visible bounds");
     Thread.sleep(200);
     for(int tap=0;tap<2;tap++) {
      long down=SystemClock.uptimeMillis();
      for(int action:new int[]{MotionEvent.ACTION_DOWN,MotionEvent.ACTION_UP}) {
-      MotionEvent e=MotionEvent.obtain(down,SystemClock.uptimeMillis(),action,540,1200,0);
+      MotionEvent e=MotionEvent.obtain(down,SystemClock.uptimeMillis(),action,focusedBounds.centerX(),focusedBounds.centerY(),0);
       e.setSource(InputDevice.SOURCE_TOUCHSCREEN);
       try { UiAutomation.class.getMethod("injectInputEventToInputFilter",InputEvent.class).invoke(ui,e); }
       finally {e.recycle();}

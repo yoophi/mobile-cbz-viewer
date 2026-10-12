@@ -25,6 +25,12 @@ Expo FileSystem의 네이티브 MD5는64 KiB씩 읽는다. 후보를 찾은 뒤 
 
 [네이티브 결과](validation/android-file-management-regression.json), [UI 결과](validation/android-file-management-ui.json)에 범위를 기록한다. 격리 검증은 개발 앱에서 `mobilecbzviewer://file-management-diagnostics`를 연다. 제품 UI 검증은 현재 소스를 로드한 Android 개발 APK에서 `python3 scripts/verify-android-file-management.py`로 실행한다. 직접 만든 작은 테스트 CBZ만 사용하며 기존 책이 같은 테스트 이름으로 존재하면 중단한다. 결과 비교용 SQLite 파일은 읽기 전용 복사본이다.
 
+## 현재 UI의 TalkBack 파일 관리
+
+API36 Pixel9 에뮬레이터에서 실제 TalkBack 입력 필터를 통한 가져오기·열기·도구 표시·다음 페이지·서재 복귀·삭제 취소·삭제 확정을 검증했다. 직접 만든 두 페이지 CBZ만 삭제하며 기존 책4개의 DB·읽던 위치·원본 해시와 파일 선택기 원본이 유지되는지 확인했다. 전체10개 검사가 통과했다. [원시 결과](validation/android-talkback-file-management.json)는 검증 기반 커밋과 작업 중인 스크립트 SHA256을 기록한다.
+
+재현: API36/1080×2424px/글꼴1배 에뮬레이터에서 `AccessibilityProbe.java`를 Java8 대상으로 컴파일·DEX 변환하여 `/data/local/tmp/cbz-accessibility.dex`에 복사한다. 현재 개발 JS의 Metro8084를 준비하고 `python3 scripts/verify-android-talkback-file-management.py --serial emulator-5554 --output /tmp/talkback-file-management.json`을 실행한다. 테스트는 접근성 설정을 복원하며 같은 이름의 책이 이미 있으면 중단한다. 초기 접근성 초점 지정 뒤 실제 더블 탭·다음 항목 제스처를 사용하고, 더블 탭 좌표는 실제 초점 대상의 중앙이다. 이번 새 UI 검증은 숨겨진 도구 표시·다음 페이지·복귀를 포함하지만 모든 리더 초점 순서·VoiceOver·음성 출력의 검증은 아니다.
+
 ## 남은 검증
 
 iOS 네이티브 실행, 실제 저장 공간 부족, 대용량 내용 식별·중복 비교의 대기 시간과 메모리, 실제 프로세스 종료 중 삭제 복구는 아직 검증하지 않았다. 현재 중단 복구 검사는 격리 DB에 저장된 삭제 의도를 만들어 재열기로 확인한다. JS 번들 생성과 격리 검사를 실제 기기 검증으로 대신하지 않는다. 기존 이미지 메모리 초과 문제도 별도 미해결 상태다.

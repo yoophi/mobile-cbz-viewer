@@ -1,0 +1,42 @@
+{
+  "sourceCommit": "b41a9549fbb441ec8aefc7d4d4a9ce9c574a6114",
+  "device": {
+    "model": "BOOX Go103",
+    "android": 12,
+    "api": 32,
+    "abi": "arm64-v8a"
+  },
+  "build": {
+    "variant": "release",
+    "task": ":app:assembleRelease",
+    "architectures": "arm64-v8a",
+    "nodeEnv": "production",
+    "signing": "Existing debug certificate retained for device upgrade; not store-distribution signing",
+    "sha256": "eaa261e59bab711384db36193cf3ea22e90994577994e06d1163b5d26bf0e4c9",
+    "embeddedJavaScriptBytes": 3479592,
+    "debuggable": false
+  },
+  "checks": [
+    "Gradle release build successful",
+    "APK signature verification passed",
+    "ADB upgrade installation successful without clearing app data",
+    "No ADB reverse connections during startup and reader verification",
+    "Library opens with existing books and reading position preserved",
+    "Reader displays adjacent pages centered with zero layout gap",
+    "Central tap shows top controls, status bar and system navigation bar",
+    "Second central tap hides top controls, status bar and system navigation bar",
+    "Typecheck passed",
+    "Lint passed"
+  ],
+  "nativeInsets": {
+    "toolsVisible": {
+      "statusBar": true,
+      "navigationBar": true
+    },
+    "toolsHidden": {
+      "statusBar": false,
+      "navigationBar": false
+    }
+  },
+  "scope": "Connected physical Android device; startup and reader smoke verification only. No release memory, accessibility, iOS or store-distribution certification."
+}
