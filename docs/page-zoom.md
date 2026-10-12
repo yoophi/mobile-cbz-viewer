@@ -30,6 +30,7 @@ adb push /tmp/cbz-touch/dex/classes.dex /data/local/tmp/cbz-touch.dex
 python3 scripts/verify-android-page-zoom.py
 python3 scripts/verify-android-scroll-zoom.py
 python3 scripts/verify-android-active-zoom-rotation.py
+python3 scripts/verify-android-fling-zoom.py --port 8084 --output docs/validation/android-fling-zoom.json
 ```
 
 페이지 검증 스크립트는 개발 빌드의 `zoom-diagnostics` 화면에서 동일한 ZoomCanvas를 실제 입력으로 조작합니다. 합성 화면의 뷰포트와 종료 시점 변환을 읽어 초점·경계를 확인합니다. 추가로 직접 생성한 reader-sample 책(id 1)을 열어 확대·가장자리 드래그 후 페이지 유지와 버튼 이동 후 초기화를 확인합니다. 사용자 책을 대상으로 실행하지 마세요. 개발 앱을 새로 실행해 초기 진단 상태를 만든 뒤 실행해야 합니다. 앱 업데이트 적용 여부가 불확실하면 같은 검증 결과를 재사용하지 말고 새 앱 실행으로 확인합니다.
@@ -79,9 +80,19 @@ Android arm64 릴리스 APK 빌드도 시작했으나 아직 완료되지 않았
 
 Android 개발 APK·최적화 JS에서 추가7개 검증이 통과했습니다. 두 방향 모두 회전이 입력 중에 적용됐고, 확대 초기화와 SQLite의 페이지·내부 위치·모드·방향 보존, 이후 일반 스크롤 재개를 확인했습니다. 실패한 경우에도 기기의 회전 설정을 복원합니다. [원시 관찰](validation/android-active-zoom-rotation.json). 이 결과는 스크롤 모드의 Android 검증이며 페이지 모드 입력 중 회전, iOS·실기기·릴리스 실행과 관성 스크롤 중 확대는 별도 범위입니다.
 
+## 관성 스크롤 중 핀치 검증
+
+`scroll-gesture-diagnostics`는 개발 빌드 전용 화면으로, 직접 만든 40페이지 `reader-stress-1.cbz`(id 2)를 확인한 뒤 제품과 같은 ScrollReader를 사용합니다. 원본·읽기 상태는 수정하지 않고 현재 원본 페이지·내부 위치 콜백과 스크롤 offset, 잠금·관성 이벤트를 최대256개 기록합니다. 화면에서 벗어나면 책 참조를 해제하고 이미지 뷰를 제거합니다. 제품 화면에서는 관찰 콜백을 넘기지 않습니다.
+
+`TouchProbe --fling`는 빠른 한 손가락 이동과 해제를 비동기로 주입하고180ms 후 실제 두 손가락 핀치를 시작합니다. 각 이벤트의 처리를 동기 대기하면 에뮬레이터 부하에 따라 마지막 이동 이후 긴 정지가 생겨 관성이 발생하지 않을 수 있기 때문입니다. 주입 성공이나 해제 표식만으로 관성 검증을 통과시키지 않습니다. 같은 기기 시계로 기록한 네이티브 관성 시작, 이후 offset 이동, 핀치 첫 DOWN의 순서를 비교하고 핀치 전에 관성 종료가 관찰된 실행도 실패로 처리합니다.
+
+검증 도구는 앱을 새로 실행하는 세 번의 반복에서 관성 중 핀치, 확대 후 위치 잠금, 한 손가락 드래그의 위치 유지, 초기화와 일반 스크롤 재개를 확인합니다. Android API36의 큰 세로 뷰포트와 현재 개발 JS를 제공하는 Metro가 필요합니다. 실제 제품의 SQLite 저장, iOS·실기기·릴리스 실행, 확대 해상도·메모리는 별도 범위입니다.
+
+Android 개발 APK·개발 JS에서 세 번의 반복, 총15개 검증이 통과했습니다. [원시 이벤트와 결과](validation/android-fling-zoom.json)에 입력 표식, 관성 offset, 잠금 이후 위치와 재개 이후 위치를 기록했습니다. 타입 검사·린트·44개 모델 테스트·iOS/Android JS 번들 생성도 통과했습니다. 이번 추가는 진단·검증이며 기존 제품의 제스처 우선순위 동작을 수정하지 않았습니다. 전체 플랫폼 대상 #9는 아직 진행 중입니다.
+
 ## 남은 범위
 
-- 스크롤 관성 동작 중 확대 시작 및 페이지 모드 입력 중 회전의 추가 네이티브 검증
+- 페이지 모드 입력 중 회전, 관성 중 확대의 iOS·실기기·릴리스 검증
 - 큰 이미지 확대 시 화질·메모리 측정
 - iOS 실제 실행과 iPhone/iPad 검증
 

@@ -7,6 +7,8 @@ import { acquireScrollPage, type ComicPage } from '@/services/library';
 import { buildScrollLayout, scrollOffsetAtPosition, scrollPositionAtOffset, scrollRowAtOffset,
   type ReadingPosition, type ScrollLayout, type ScrollRow } from '@/utils/scroll-layout';
 
+export type ScrollObservation = { type: 'scroll' | 'lock' | 'momentum-begin' | 'momentum-end'; offset: number; enabled: boolean; time: number };
+
 const Band = memo(function Band({ page, row, width, active, repair }: {
   page: ComicPage; row: ScrollRow; width: number; active: boolean; repair: () => void;
 }) {
@@ -35,9 +37,10 @@ const Band = memo(function Band({ page, row, width, active, repair }: {
   </View>;
 });
 
-function ScrollBody({ pages, layout, width, height, position, navigation, onPosition, repair, scrollGesture, scrollEnabled }: {
+function ScrollBody({ pages, layout, width, height, position, navigation, onPosition, repair, scrollGesture, scrollEnabled, onObservation }: {
   pages: ComicPage[]; layout: ScrollLayout; width: number; height: number;
   position: ReadingPosition; navigation: ReadingPosition; onPosition: (value: ReadingPosition) => void; repair: () => void;
+  onObservation?: (event: ScrollObservation) => void;
 } & ZoomScrollControls) {
   const list = useRef<FlatList<ScrollRow>>(null);
   const [initialOffset] = useState(() => scrollOffsetAtPosition(layout, position));
@@ -48,6 +51,11 @@ function ScrollBody({ pages, layout, width, height, position, navigation, onPosi
   const pending = useRef<number | undefined>(initialOffset);
   const lastOffset = useRef<number | undefined>(undefined);
   const lastNavigation = useRef(navigation);
+  const rawOffset = useRef(initialOffset);
+  const observe = useCallback((type: ScrollObservation['type'], offset = rawOffset.current) => {
+    onObservation?.({ type, offset, enabled: scrollEnabled, time: Date.now() });
+  }, [onObservation, scrollEnabled]);
+  useEffect(() => { observe('lock'); }, [observe]);
 
   const move = useCallback((offset: number) => {
     pending.current = offset;
@@ -62,6 +70,8 @@ function ScrollBody({ pages, layout, width, height, position, navigation, onPosi
   }, [navigation, layout, move]);
   const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offset = Math.max(0, event.nativeEvent.contentOffset.y);
+    rawOffset.current = offset;
+    observe('scroll', offset);
     if (pending.current !== undefined) {
       if (Math.abs(offset - pending.current) > 3) return;
       pending.current = undefined;
@@ -76,7 +86,7 @@ function ScrollBody({ pages, layout, width, height, position, navigation, onPosi
     const last = Math.min(layout.rows.length - 1, scrollRowAtOffset(layout, offset + height) + 1);
     setRange((previous) => previous.first === first && previous.last === last ? previous : { first, last });
     onPosition(scrollPositionAtOffset(layout, offset));
-  }, [height, layout, onPosition]);
+  }, [height, layout, onPosition, observe]);
   const renderItem = useCallback(({ item, index }: { item: ScrollRow; index: number }) =>
     <Band page={pages[item.pageIndex]} row={item} width={width} active={index >= range.first && index <= range.last} repair={repair} />,
   [pages, width, range, repair]);
@@ -88,6 +98,8 @@ function ScrollBody({ pages, layout, width, height, position, navigation, onPosi
     initialNumToRender={2} maxToRenderPerBatch={2} updateCellsBatchingPeriod={30} windowSize={3}
     removeClippedSubviews={false} scrollEnabled={scrollEnabled} scrollEventThrottle={100} onScroll={onScroll}
     onScrollBeginDrag={() => { pending.current = undefined; }}
+    onMomentumScrollBegin={onObservation ? (event) => observe('momentum-begin', event.nativeEvent.contentOffset.y) : undefined}
+    onMomentumScrollEnd={onObservation ? (event) => observe('momentum-end', event.nativeEvent.contentOffset.y) : undefined}
     onContentSizeChange={() => { if (!initialized.current) { initialized.current = true; move(initialOffset); } }}
     ListFooterComponent={<View style={{ height: Math.max(0, height - (lastPage?.length ?? height)) }} />}
     accessibilityLabel="세로 스크롤 만화" style={styles.list} /></GestureDetector>;
@@ -96,6 +108,7 @@ function ScrollBody({ pages, layout, width, height, position, navigation, onPosi
 function SizedScroll({ pages, width, height, ...props }: {
   pages: ComicPage[]; width: number; height: number; position: ReadingPosition; navigation: ReadingPosition;
   onPosition: (position: ReadingPosition) => void; repair: () => void;
+  onObservation?: (event: ScrollObservation) => void;
 }) {
   const result = useMemo(() => {
     try { return { layout: buildScrollLayout(pages, width) }; }
@@ -111,6 +124,7 @@ function SizedScroll({ pages, width, height, ...props }: {
 export function ScrollReader(props: {
   pages: ComicPage[]; position: ReadingPosition; navigation: ReadingPosition;
   onPosition: (position: ReadingPosition) => void; repair: () => void;
+  onObservation?: (event: ScrollObservation) => void;
 }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   return <View style={styles.list} onLayout={({ nativeEvent: { layout } }) => {
