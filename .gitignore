@@ -41,3 +41,10 @@ example
 # generated native folders
 /ios
 /android
+
+# Secrets and private reading material
+.env
+.env.*
+!.env.example
+*.cbz
+*.cbr
