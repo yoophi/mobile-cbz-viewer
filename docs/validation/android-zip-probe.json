@@ -1,0 +1,24 @@
+{
+  "platform": "android",
+  "checks": [
+    {
+      "name": "Pre-extraction inventory: Unicode, nested paths and sizes",
+      "passed": true
+    },
+    {
+      "name": "Selective disk extraction preserves PNG bytes and Unicode paths",
+      "passed": true
+    },
+    {
+      "name": "Corrupt archive rejected before extraction",
+      "passed": true,
+      "detail": "ERR_CORRUPT_ARCHIVE"
+    },
+    {
+      "name": "Pre-aborted extraction writes nothing",
+      "passed": true,
+      "detail": "ERR_CANCELLED"
+    }
+  ],
+  "passed": true
+}

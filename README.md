@@ -54,6 +54,8 @@ npx expo export --platform ios --platform android --output-dir dist
 
 ## 작업 관리 (td)
 
+네이티브 ZIP 모듈 검증과 재현 방법은 [검증 기록](docs/native-zip-validation.md)에 남깁니다. 모듈 설치와 실제 기기 호환성 검증은 구분하며, CBZ 열람 기능은 후속 작업입니다.
+
 `td`의 GitHub Issues 저장소를 사용하며, 대상은 `origin`의 [yoophi/mobile-cbz-viewer](https://github.com/yoophi/mobile-cbz-viewer/issues)입니다. `td`와 GitHub CLI(`gh`)를 설치하고 GitHub 인증을 완료한 뒤 프로젝트 루트에서 초기화합니다.
 
 ```sh

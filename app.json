@@ -37,7 +37,8 @@
         }
       ],
       "expo-sqlite",
-      "expo-dev-client"
+      "expo-dev-client",
+      "react-native-zip-archive"
     ],
     "experiments": {
       "typedRoutes": true,
