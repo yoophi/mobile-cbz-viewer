@@ -9,6 +9,7 @@ import { ScrollReader } from './scroll-reader';
 import type { ReadingPosition } from '@/utils/scroll-layout';
 import { DEFAULT_READING_STATE, normalizeReadingState, type ReadingState } from '@/utils/reading-state';
 import { ReadingSaveNotice } from './reading-save-notice';
+import { ZoomCanvas } from './zoom-canvas';
 
 function ReaderButton({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
   return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled}
@@ -20,11 +21,13 @@ function PageImage({ page, repair }: { page: ComicPage; repair: () => void }) {
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   return <View style={styles.canvas}>
-    <Image key={attempt} source={{ uri: page.uri }} style={styles.image} contentFit="contain"
+    <ZoomCanvas key={attempt} image={page.width && page.height ? { width: page.width, height: page.height } : undefined}>
+    <Image source={{ uri: page.uri }} style={styles.image} contentFit="contain"
       cachePolicy="none" recyclingKey={`${page.comicId}:${page.position}:${attempt}`} allowDownscaling
       enforceEarlyResizing autoplay={false}
       accessibilityLabel={`${page.position + 1} 페이지`} onLoad={() => setLoading(false)}
       onError={() => { setLoading(false); setFailed(true); }} />
+    </ZoomCanvas>
     {loading ? <View style={styles.overlay}><ActivityIndicator color="#9abfff" /><Text style={styles.text}>이미지 불러오는 중…</Text></View> : null}
     {failed ? <View style={styles.overlay}>
       <Text accessibilityRole="alert" style={styles.error}>이미지를 표시하지 못했습니다. 다른 페이지로 이동하거나 원본에서 복구해 주세요.</Text>
