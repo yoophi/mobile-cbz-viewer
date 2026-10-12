@@ -1,0 +1,24 @@
+{
+  "environment": "Go103 physical Android12 tablet, 2480x1860 landscape, updated debug development build",
+  "method": "Real center tap, native window InsetsSource visibility and visual screenshot review; screenshots of user content are not published.",
+  "sourceFilesSha256": {
+    "src/components/comic-reader.tsx": "9483531bebc76b365f98450e499a4ed5e42b0ca38014e8db7f88c9527a82074c",
+    "src/components/zoom-canvas.tsx": "3e3d74d777c57edb1f2902fde5c4dac444b3834f96b4ebb53a3ddb9f86ac01a3",
+    "src/utils/page-spread.ts": "8f02cc2e4d1e8d81da058d3cd97226127919d96d899a7c8678de40afd91df46e",
+    "src/app/_layout.tsx": "8f292a25b9421873e92fb8ddd53f7b15bbf9bf2a24c5df878586bf048ecd6925"
+  },
+  "checks": [
+    "Both system bars hidden with top reader navigation",
+    "Center tap shows top reader navigation and both system bars",
+    "Two images touch and are centered at maximal common height (visual review)",
+    "Center tap toggles chrome without advancing visible pages (visual review)"
+  ],
+  "hiddenBars": {
+    "ITYPE_STATUS_BAR": false,
+    "ITYPE_NAVIGATION_BAR": false
+  },
+  "visibleBars": {
+    "ITYPE_STATUS_BAR": true,
+    "ITYPE_NAVIGATION_BAR": true
+  }
+}

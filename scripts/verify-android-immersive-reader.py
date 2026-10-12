@@ -26,6 +26,7 @@ def count(ui=None):
  assert visible,'No native page image'
  return (str(visible[0]) if len(visible)==1 else f'{visible[0]}–{visible[-1]}')+' / 40'
 def pages(ui=None):return [n for n in (ui or nodes()) if re.fullmatch(r'\d+ 페이지',n.get('content-desc',''))]
+def navigation_visible():return bool(re.search(r'type=navigationBars[^\n]*visible=true',adb('shell','dumpsys','window')))
 def status_visible():return bool(re.search(r'type=statusBars[^\n]*visible=true',adb('shell','dumpsys','window')))
 def tools():return any(n.get('content-desc')=='열람 설정' for n in nodes())
 def center():adb('shell','input','tap',540,1050);time.sleep(.35)
@@ -37,7 +38,9 @@ def check(name,ok):
  checks.append(name);print('PASS',name,flush=True)
 route()
 for _ in range(8):
- if pages():break
+ ui=nodes()
+ if any(n.get('text')=='Got it' for n in ui):tap('Got it');ui=nodes()
+ if pages(ui):break
  time.sleep(1);route()
 ui=nodes();assert any(n.get('text')=='reader-stress-1.cbz' for n in ui) or pages(ui),'Owned synthetic reader not loaded'
 if not tools():center()
@@ -51,10 +54,10 @@ if any(n.get('content-desc')=='페이지 배치: 두 장' for n in nodes()):tap(
 # Start at an interior source anchor without editing the database.
 current=int(count().split(' /')[0])
 for _ in range(abs(current-12)):edge('left' if current>12 else 'right')
-before=count();center();check('center tap hides top navigation',not tools());check('hidden navigation hides system status bar',not status_visible())
+before=count();center();check('center tap hides top navigation',not tools());check('hidden navigation hides system status bar',not status_visible());check('hidden navigation hides bottom system bar',not navigation_visible())
 ui=nodes();rect=box(pages(ui)[0]);check('hidden chrome gives image at least 95 percent of safe height',rect[3]-rect[1]>2200)
 check('no visible previous/next text or bottom toolbar',not any(n.get('text') in ['← 이전','다음 →','열람 모드: 페이지','읽기 방향: 좌→우'] for n in ui))
-center();check('second center tap shows top navigation',tools());check('visible navigation shows system status bar',status_visible());check('center taps preserve source page',count()==before)
+center();check('second center tap shows top navigation',tools());check('visible navigation shows system status bar',status_visible());check('visible navigation shows bottom system bar',navigation_visible());check('center taps preserve source page',count()==before)
 center();edge('right');check('right transparent region advances one page',int(count().split(' /')[0])==int(before.split(' /')[0])+1)
 edge('left');check('left transparent region returns one page',count()==before)
 # Double taps in a navigation region are zoom gestures, not page advances.
@@ -105,6 +108,6 @@ tap('열람 설정')
 if any(n.get('content-desc')=='읽기 방향: 우→좌' for n in nodes()):tap('읽기 방향: 우→좌')
 tap('열람 모드: 페이지');check('scroll mode remains available from settings',any(n.get('content-desc')=='세로 스크롤 만화' for n in nodes()))
 tap('열람 모드: 세로 스크롤');tap('열람 설정');tap('페이지 배치: 두 장');center()
-center();tap('서재로');check('library restores system status bar',status_visible())
-pathlib.Path(args.output).write_text(json.dumps({'workingTree':True,'sourceFilesSha256':{p:subprocess.check_output(['shasum','-a','256',p],text=True).split()[0] for p in ['src/components/comic-reader.tsx','src/components/zoom-canvas.tsx','src/utils/page-spread.ts']},'sourceCommit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'environment':'owned API36 emulator, 1080x2424, density420; debug development build','checks':checks,'observations':observations},ensure_ascii=False,indent=2)+'\n')
+center();tap('서재로');check('library restores system status bar',status_visible());check('library restores bottom system bar',navigation_visible())
+pathlib.Path(args.output).write_text(json.dumps({'workingTree':True,'sourceFilesSha256':{p:subprocess.check_output(['shasum','-a','256',p],text=True).split()[0] for p in ['src/components/comic-reader.tsx','src/components/zoom-canvas.tsx','src/utils/page-spread.ts','src/app/_layout.tsx']},'sourceCommit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'environment':'owned API36 emulator, 1080x2424, density420; debug development build','checks':checks,'observations':observations},ensure_ascii=False,indent=2)+'\n')
 print('ALL',len(checks),'PASS',flush=True)

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import Storage from 'expo-sqlite/kv-store';
 import { StatusBar } from 'expo-status-bar';
+import { NavigationBar } from 'expo-navigation-bar';
 import { router, useFocusEffect } from 'expo-router';
 import { openComic, prepareComic, retainComic, getReadingState, createComicReadingWriter, type Comic, type ComicPage } from '@/services/library';
 import { pageAfter, physicalPageAction } from '@/utils/reader-navigation';
@@ -171,7 +172,7 @@ export function ComicReader({ id }: { id?: number }) {
   }
   const returnToLibrary = useCallback(() => router.dismissTo('/'), []);
   return <SafeAreaView style={styles.screen} onAccessibilityEscape={returnToLibrary}>
-    {focused ? <StatusBar hidden={!showTools} style="light" /> : null}
+    {focused ? <><StatusBar hidden={!showTools} style="light" /><NavigationBar hidden={!showTools} style="light" /></> : null}
     <View style={styles.screen}>
     {showTools ? <View style={styles.topOverlay}>
     <ScrollView horizontal style={styles.header} contentContainerStyle={styles.headerContent} showsHorizontalScrollIndicator={false}>

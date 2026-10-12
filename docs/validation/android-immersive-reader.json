@@ -1,19 +1,22 @@
 {
   "workingTree": true,
   "sourceFilesSha256": {
-    "src/components/comic-reader.tsx": "357d1c102dc96a7690d13b4a4c5013ce2821951baec630eb85c1f7fe083eefac",
+    "src/components/comic-reader.tsx": "9483531bebc76b365f98450e499a4ed5e42b0ca38014e8db7f88c9527a82074c",
     "src/components/zoom-canvas.tsx": "3e3d74d777c57edb1f2902fde5c4dac444b3834f96b4ebb53a3ddb9f86ac01a3",
-    "src/utils/page-spread.ts": "8f02cc2e4d1e8d81da058d3cd97226127919d96d899a7c8678de40afd91df46e"
+    "src/utils/page-spread.ts": "8f02cc2e4d1e8d81da058d3cd97226127919d96d899a7c8678de40afd91df46e",
+    "src/app/_layout.tsx": "8f292a25b9421873e92fb8ddd53f7b15bbf9bf2a24c5df878586bf048ecd6925"
   },
-  "sourceCommit": "74eb71d7c280eca63ae0f6c7ca4cf7a97902aa03",
+  "sourceCommit": "c566af0b3365a1f16f35f4fa5ba77b5b6279cd15",
   "environment": "owned API36 emulator, 1080x2424, density420; debug development build",
   "checks": [
     "center tap hides top navigation",
     "hidden navigation hides system status bar",
+    "hidden navigation hides bottom system bar",
     "hidden chrome gives image at least 95 percent of safe height",
     "no visible previous/next text or bottom toolbar",
     "second center tap shows top navigation",
     "visible navigation shows system status bar",
+    "visible navigation shows bottom system bar",
     "center taps preserve source page",
     "right transparent region advances one page",
     "left transparent region returns one page",
@@ -33,7 +36,8 @@
     "restart restores source page and double layout",
     "large-font top navigation remains available",
     "scroll mode remains available from settings",
-    "library restores system status bar"
+    "library restores system status bar",
+    "library restores bottom system bar"
   ],
   "observations": {
     "pairBounds": [
