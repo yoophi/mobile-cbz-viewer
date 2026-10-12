@@ -46,6 +46,7 @@ function ScrollBody({ pages, layout, width, height, position, navigation, onPosi
     last: Math.min(layout.rows.length - 1, scrollRowAtOffset(layout, initialOffset + height) + 1) }));
   const initialized = useRef(false);
   const pending = useRef<number | undefined>(initialOffset);
+  const lastOffset = useRef<number | undefined>(undefined);
   const lastNavigation = useRef(navigation);
 
   const move = useCallback((offset: number) => {
@@ -61,8 +62,16 @@ function ScrollBody({ pages, layout, width, height, position, navigation, onPosi
   }, [navigation, layout, move]);
   const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offset = Math.max(0, event.nativeEvent.contentOffset.y);
-    if (pending.current !== undefined && Math.abs(offset - pending.current) > 3) return;
-    pending.current = undefined;
+    if (pending.current !== undefined) {
+      if (Math.abs(offset - pending.current) > 3) return;
+      pending.current = undefined;
+      lastOffset.current = offset;
+      // Restoring a source anchor rounds to native display pixels. Keep the
+      // source position until an actual scroll rather than saving that rounding.
+      return;
+    }
+    if (lastOffset.current === offset) return;
+    lastOffset.current = offset;
     const first = Math.max(0, scrollRowAtOffset(layout, offset) - 1);
     const last = Math.min(layout.rows.length - 1, scrollRowAtOffset(layout, offset + height) + 1);
     setRange((previous) => previous.first === first && previous.last === last ? previous : { first, last });

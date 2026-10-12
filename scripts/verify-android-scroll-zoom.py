@@ -76,4 +76,47 @@ pinch(); tap('열람 모드: 세로 스크롤')
 record('mode change resets zoom',not zoomed() and saved()['mode']=='page')
 tap('열람 모드: 페이지')
 record('return to scroll keeps source anchor with base zoom',not zoomed() and saved()['mode']=='scroll')
+# Restore the user's rotation settings even when any assertion fails.
+rotation = adb('shell','settings','get','system','user_rotation').strip()
+auto_rotation = adb('shell','settings','get','system','accelerometer_rotation').strip()
+def orientation(landscape):
+    for _ in range(20):
+        ui = nodes()
+        scroll = next((n for n in ui if n.get('content-desc') == '세로 스크롤 만화'), None)
+        if scroll is not None:
+            x1,y1,x2,y2 = map(int,re.findall(r'\d+',scroll.get('bounds')))
+            if ((x2-x1) > (y2-y1)) == landscape: return ui
+        time.sleep(.2)
+    raise AssertionError('Reader viewport did not rotate')
+try:
+    adb('shell','settings','put','system','accelerometer_rotation',0)
+    adb('shell','settings','put','system','user_rotation',0)
+    orientation(False)
+    previous = saved()
+    adb('shell','input','swipe',540,1500,540,1100,600)
+    before = saved()
+    record('rotation probe starts inside a source page',not same(previous,before) and 0 < before['fraction'] < .95)
+    pinch(); assert zoomed(), 'Expected portrait zoom before rotation'
+    adb('shell','settings','put','system','user_rotation',1)
+    orientation(True)
+    record('landscape rotation resets scroll zoom',not zoomed())
+    after = saved()
+    if not same(before,after): raise AssertionError(f'Landscape anchor changed: {before} -> {after}')
+    record('landscape rotation preserves source anchor and settings',True)
+    # Actual double tap in the newly sized landscape viewport.
+    scroll = next(n for n in nodes() if n.get('content-desc') == '세로 스크롤 만화')
+    x1,y1,x2,y2 = map(int,re.findall(r'\d+',scroll.get('bounds')))
+    x,y = (x1+x2)//2,(y1+y2)//2
+    adb('shell',f'input tap {x} {y}; input tap {x} {y}')
+    assert zoomed(), 'Expected landscape zoom before rotation'
+    adb('shell','settings','put','system','user_rotation',0)
+    orientation(False)
+    record('portrait rotation resets landscape zoom',not zoomed())
+    record('portrait rotation preserves source anchor and settings',same(before,saved()))
+    adb('shell','input','swipe',540,1500,540,1100,600)
+    record('native scrolling resumes after rotation restoration',not same(before,saved()))
+finally:
+    for key,value in [('user_rotation',rotation),('accelerometer_rotation',auto_rotation)]:
+        if value == 'null': adb('shell','settings','delete','system',key)
+        else: adb('shell','settings','put','system',key,value)
 print(json.dumps({'platform':'Android emulator API36','passed':len(checks),'checks':checks},ensure_ascii=False,indent=2))
