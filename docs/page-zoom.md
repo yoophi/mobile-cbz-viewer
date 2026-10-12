@@ -30,6 +30,7 @@ adb push /tmp/cbz-touch/dex/classes.dex /data/local/tmp/cbz-touch.dex
 python3 scripts/verify-android-page-zoom.py
 python3 scripts/verify-android-scroll-zoom.py
 python3 scripts/verify-android-active-zoom-rotation.py
+python3 scripts/verify-android-active-page-rotation.py --port 8084 --output docs/validation/android-active-page-rotation.json
 python3 scripts/verify-android-fling-zoom.py --port 8084 --output docs/validation/android-fling-zoom.json
 ```
 
@@ -80,6 +81,14 @@ Android arm64 릴리스 APK 빌드도 시작했으나 아직 완료되지 않았
 
 Android 개발 APK·최적화 JS에서 추가7개 검증이 통과했습니다. 두 방향 모두 회전이 입력 중에 적용됐고, 확대 초기화와 SQLite의 페이지·내부 위치·모드·방향 보존, 이후 일반 스크롤 재개를 확인했습니다. 실패한 경우에도 기기의 회전 설정을 복원합니다. [원시 관찰](validation/android-active-zoom-rotation.json). 이 결과는 스크롤 모드의 Android 검증이며 페이지 모드 입력 중 회전, iOS·실기기·릴리스 실행과 관성 스크롤 중 확대는 별도 범위입니다.
 
+## 페이지 모드 입력 중 회전
+
+`verify-android-active-page-rotation.py`는 직접 만든 3페이지 `reader-sample.cbz`(id 1)의 실제 페이지 리더를 사용합니다. 화면에 표시된 이미지의 네이티브 경계에서 두 손가락 입력 좌표를 구합니다. 좌→우·우→좌 각각에서 핀치 입력 중 가로·세로로 회전합니다. `TouchProbe --slow`의5번째 이동 표식 이후2.5초 안에 WindowManager의 실제 회전 변경과 살아 있는 입력 프로세스를 함께 확인합니다.
+
+입력이 끝난 뒤 확대 초기화, SQLite의 페이지·내부 위치·모드·방향 보존, 실제 이미지와 페이지 표시의 일치를 확인합니다. 각 읽기 방향에서 더블 탭 확대·초기화와 버튼 페이지 이동도 다시 실행합니다. 합성 책의 읽기 상태만 정상 UI로 변경하고 SQLite는 읽기 전용 복사본으로 조회합니다. 실패 시에도 기기의 원래 회전 설정을 복원합니다.
+
+Android 개발 APK·개발 JS에서22개 검증이 통과했습니다. 네 번 모두 실제 회전이 입력 표식 이후2.5초 안에 적용됐고, 저장 위치와 표시 페이지가 유지됐습니다. [원시 결과](validation/android-active-page-rotation.json). 타입 검사와 린트도 통과했습니다. 페이지·스크롤 모드의 Android 입력 중 회전 근거를 확보했으며 iOS·실기기·릴리스 범위는 남아 있습니다.
+
 ## 관성 스크롤 중 핀치 검증
 
 `scroll-gesture-diagnostics`는 개발 빌드 전용 화면으로, 직접 만든 40페이지 `reader-stress-1.cbz`(id 2)를 확인한 뒤 제품과 같은 ScrollReader를 사용합니다. 원본·읽기 상태는 수정하지 않고 현재 원본 페이지·내부 위치 콜백과 스크롤 offset, 잠금·관성 이벤트를 최대256개 기록합니다. 화면에서 벗어나면 책 참조를 해제하고 이미지 뷰를 제거합니다. 제품 화면에서는 관찰 콜백을 넘기지 않습니다.
@@ -92,7 +101,7 @@ Android 개발 APK·개발 JS에서 세 번의 반복, 총15개 검증이 통과
 
 ## 남은 범위
 
-- 페이지 모드 입력 중 회전, 관성 중 확대의 iOS·실기기·릴리스 검증
+- 페이지·스크롤 입력 중 회전과 관성 중 확대의 iOS·실기기·릴리스 검증
 - 큰 이미지 확대 시 화질·메모리 측정
 - iOS 실제 실행과 iPhone/iPad 검증
 
