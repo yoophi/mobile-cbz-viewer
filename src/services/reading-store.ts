@@ -24,7 +24,7 @@ export function createReadingStore(database: () => Promise<SQLiteDatabase>) {
     const operation = (writes.get(id) ?? Promise.resolve()).catch(() => {}).then(async () => {
       const db = await database();
       const comic = await db.getFirstAsync<{ pageCount: number; status: string }>('SELECT pageCount, status FROM comics WHERE id = ?', id);
-      if (!comic) throw new Error('Book no longer exists');
+      if (!comic || comic.status === 'deleting') { pending.delete(id); if (failures.delete(id)) publish(); return; }
       const state = normalizeReadingState(value.state, comic.status === 'ready' && comic.pageCount > 0 ? comic.pageCount : Number.MAX_SAFE_INTEGER);
       await db.runAsync(`INSERT INTO comic_reading_state (comicId, pageIndex, fraction, mode, direction, updatedAt)
         VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(comicId) DO UPDATE SET pageIndex=excluded.pageIndex,
@@ -61,6 +61,7 @@ export function createReadingStore(database: () => Promise<SQLiteDatabase>) {
     if (rejected) throw new Error(message);
   }
   return { saveReadingState, getReadingState, createComicReadingWriter, retryReadingSaves,
+    forgetReadingState: (id: number) => { pending.delete(id); if (failures.delete(id)) publish(); },
     getReadingSaveFailures: () => snapshot,
     subscribeReadingSaveFailures: (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener); }; },
     drainReadingWrites: async () => { await Promise.allSettled([...writes.values()]); } };

@@ -25,7 +25,7 @@ export async function runReadingProbe() {
     const before = await store.openComic(first.id);
     await store.dispose();
     connection = await openDatabaseAsync(name, { useNewConnection: true });
-    await connection.execAsync('DROP TABLE comic_reading_state; PRAGMA user_version = 4');
+    await connection.execAsync('DROP TABLE comic_reading_state; DROP INDEX comic_content_identity; ALTER TABLE comics DROP COLUMN contentHash; PRAGMA user_version = 4');
     store = factory();
     const migrated = await store.openComic(first.id);
     const migration = {
@@ -38,8 +38,8 @@ export async function runReadingProbe() {
         return page.position === old.position && page.path === old.path && page.size === old.size && page.uri === old.uri && page.width === old.width && page.height === old.height;
       }),
     };
-    checks.push({ name: 'v4-to-v5 migration preserves ready pages, geometry, cover and original with default reading settings', passed:
-      migration.schemaVersion === 5 && migration.ready && migration.pageCount === 3 && migration.coverPresent &&
+    checks.push({ name: 'v4-to-v6 migration preserves ready pages, geometry, cover and original with default reading settings', passed:
+      migration.schemaVersion === 6 && migration.ready && migration.pageCount === 3 && migration.coverPresent &&
       migration.defaultSettings && migration.sourceCount === 1 && migration.preservedPages, details: migration });
     const desired: ReadingState = { index: 1, fraction: .42, mode: 'scroll', direction: 'rtl' };
     await store.saveReadingState(first.id, desired);
@@ -47,7 +47,7 @@ export async function runReadingProbe() {
     const restored = await store.getReadingState(first.id, 3);
     checks.push({ name: 'Page, source fraction, mode, direction and timestamp survive database reopen', passed:
       same(restored, desired) && restored.updatedAt > 0 });
-    source.write(fixtureBytes); // Import consumes picker/cache copies.
+    source.write(zipSync({ '1.png': imageBytes, '2.png': imageBytes, '3.png': imageBytes })); // Distinct book contents.
     const second = await store.importComic({ name: 'synthetic-other.cbz', uri: source.uri, lastModified: 0 });
     await store.openComic(second.id);
     await store.saveReadingState(second.id, { ...DEFAULT_READING_STATE, index: 2 });

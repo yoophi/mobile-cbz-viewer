@@ -20,7 +20,9 @@ export async function runCacheProbe() {
   try {
     const books: Comic[] = [];
     for (let i = 0; i < 3; i++) {
-      const file = new File(sources, `${i}.cbz`); file.write(fixtureBytes);
+      const bytes = new Uint8Array(fixtureBytes.length + 1); bytes.set(fixtureBytes);
+      bytes[fixtureBytes.length - 2] = 1; bytes[fixtureBytes.length] = i; // Distinct valid ZIP comments.
+      const file = new File(sources, `${i}.cbz`); file.write(bytes);
       books.push(await store.importComic({ name: `cache-${i}.cbz`, uri: file.uri, lastModified: 0 }));
     }
     await store.prepareComic(books[0].id);

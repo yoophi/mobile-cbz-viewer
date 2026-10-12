@@ -8,14 +8,19 @@ import { checkCancelled, ComicArchiveError, inspectArchive, verifyArchiveImages,
 import { comparePagePaths } from '@/utils/page-order';
 import { CACHE_LIMITS, selectCacheEvictions, type CacheEntry, type CacheBudget } from '@/utils/cache-policy';
 import { readImageDimensions } from '@/utils/image-dimensions';
+import { equalFileBytes } from '@/utils/file-identity';
 import { createScrollCache } from './scroll-cache';
 import { createReadingStore } from './reading-store';
 
 export type Comic = {
   id: number; name: string; uri: string; size: number; importedAt: number;
-  archivePath: string | null; status: 'stored' | 'extracting' | 'ready'; error: string | null; pageCount: number;
+  archivePath: string | null; status: 'stored' | 'extracting' | 'ready' | 'deleting'; error: string | null; pageCount: number;
   coverPath: string | null; coverError: string | null; coverUri?: string;
+  contentHash?: string | null; readingIndex?: number | null; readingMode?: string | null; sourceMissing?: boolean;
 };
+export class DuplicateComicError extends ComicArchiveError {
+  constructor(public readonly comic: Comic) { super('같은 내용의 파일이 이미 서재에 있습니다.'); }
+}
 export type ComicPage = { comicId: number; position: number; path: string; size: number; uri: string; width: number | null; height: number | null };
 // Native ZIP cancellation is global; allow only one preparation across all stores.
 let preparing = false;
@@ -59,6 +64,8 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
   if (![databaseName, archiveFolder, cacheNamespace].every((name) => /^[a-zA-Z0-9.-]+$/.test(name) && !name.startsWith('.'))) throw new Error('Invalid storage name');
   if (!Object.values(cacheBudget).every((value) => Number.isSafeInteger(value) && value > 0)) throw new Error('Invalid cache budget');
   let database: Promise<SQLiteDatabase> | undefined;
+  let mutating = false;
+  const deleting = new Set<number>();
   const readers = new Map<number, number>();
   const stagingRoot = () => new Directory(Paths.cache, `${cacheNamespace}-staging`);
   const extractedRoot = () => new Directory(Paths.cache, `${cacheNamespace}-extracted`);
@@ -77,6 +84,7 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
   }
 
   function retainComic(id: number) {
+    if (deleting.has(id)) throw new ComicArchiveError('삭제 중인 만화입니다.');
     readers.set(id, (readers.get(id) ?? 0) + 1);
     let released = false;
     return () => {
@@ -102,11 +110,12 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
     const metadata = await db.getAllAsync<{ id: number; lastAccess: number }>(`SELECT c.id, COALESCE(a.lastAccess, c.importedAt) AS lastAccess
       FROM comics c LEFT JOIN comic_cache_access a ON a.comicId = c.id WHERE c.status = 'ready'`);
     const known = new Set(metadata.map((entry) => String(entry.id)));
+    const pendingDeletes = new Set((await db.getAllAsync<{ id: number }>("SELECT id FROM comics WHERE status = 'deleting'")).map(({ id }) => String(id)));
     const root = extractedRoot();
     // Retry deletions interrupted after their metadata was made regenerable.
     // A failed deletion must not disappear from subsequent capacity accounting.
     if (root.exists) for (const item of root.list()) {
-      if (item instanceof Directory && /^[0-9]+$/.test(item.name) && !known.has(item.name)
+      if (item instanceof Directory && /^[0-9]+$/.test(item.name) && !known.has(item.name) && !pendingDeletes.has(item.name)
         && Number(item.name) !== protectedId && !readers.has(Number(item.name))) item.delete();
     }
     const entries: CacheEntry[] = [];
@@ -148,9 +157,13 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
     scrollCache.recover();
     const staging = stagingRoot();
     if (staging.exists) staging.delete();
+    for (const comic of await db.getAllAsync<Comic>("SELECT * FROM comics WHERE status = 'deleting'")) {
+      try { await finishDeletion(db, comic); }
+      catch { await db.runAsync("UPDATE comics SET error = '파일 정리를 완료하지 못했습니다. 삭제를 다시 시도해 주세요.' WHERE id = ?", comic.id); }
+    }
     await db.runAsync("UPDATE comics SET status = 'stored', error = '이전 추출이 중단되었습니다. 다시 시도해 주세요.' WHERE status = 'extracting'");
     const comics = await db.getAllAsync<Comic>('SELECT * FROM comics');
-    const ready = new Set(comics.filter((comic) => comic.status === 'ready').map((comic) => String(comic.id)));
+    const ready = new Set(comics.filter((comic) => comic.status === 'ready' || comic.status === 'deleting').map((comic) => String(comic.id)));
     const extracted = extractedRoot();
     if (extracted.exists) for (const item of extracted.list()) {
       if (item instanceof Directory && /^[0-9]+$/.test(item.name) && !ready.has(item.name)) item.delete();
@@ -164,6 +177,7 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
       }
     }
     for (const comic of comics) {
+      if (comic.status === 'deleting') continue;
       let exists = false;
       try { exists = comicFile(comic).exists; } catch { /* Legacy/missing paths need re-import. */ }
       if (!exists) {
@@ -191,7 +205,7 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
           );`);
         await db.withExclusiveTransactionAsync(async (transaction) => {
           const version = (await transaction.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version ?? 0;
-          if (version > 5) throw new Error('지원하지 않는 서재 버전입니다. 앱을 업데이트해 주세요.');
+          if (version > 6) throw new Error('지원하지 않는 서재 버전입니다. 앱을 업데이트해 주세요.');
           if (version < 2) {
             await transaction.execAsync(`ALTER TABLE comics ADD COLUMN archivePath TEXT;
               ALTER TABLE comics ADD COLUMN status TEXT NOT NULL DEFAULT 'stored';
@@ -228,6 +242,7 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
               direction TEXT NOT NULL, updatedAt INTEGER NOT NULL);
               PRAGMA user_version = 5;`);
           }
+          if (version < 6) await transaction.execAsync('ALTER TABLE comics ADD COLUMN contentHash TEXT; CREATE INDEX comic_content_identity ON comics(size, contentHash); PRAGMA user_version = 6;');
         });
         await db.execAsync('CREATE TABLE IF NOT EXISTS comic_cache_access (comicId INTEGER PRIMARY KEY REFERENCES comics(id) ON DELETE CASCADE, lastAccess INTEGER NOT NULL)');
         await recover(db);
@@ -243,9 +258,16 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
   }
 
   async function listComics(): Promise<Comic[]> {
-    const comics = await (await getDatabase()).getAllAsync<Comic>('SELECT * FROM comics ORDER BY importedAt DESC, id DESC');
-    return comics.map((comic) => ({ ...comic, coverUri: comic.status === 'ready' && comic.coverPath === `${comic.id}/cover.jpg`
-      ? new File(extractedRoot(), comic.coverPath).uri : undefined }));
+    const db = await getDatabase();
+    await readingStore.drainReadingWrites();
+    const comics = await db.getAllAsync<Comic>(`SELECT c.*, r.pageIndex AS readingIndex, r.mode AS readingMode
+      FROM comics c LEFT JOIN comic_reading_state r ON r.comicId = c.id ORDER BY c.importedAt DESC, c.id DESC`);
+    return comics.map((comic) => {
+      let sourceMissing = true;
+      try { sourceMissing = !comicFile(comic).exists; } catch { /* Show re-import for legacy paths. */ }
+      return { ...comic, sourceMissing, coverUri: comic.status === 'ready' && comic.coverPath === `${comic.id}/cover.jpg`
+        ? new File(extractedRoot(), comic.coverPath).uri : undefined };
+    });
   }
 
   async function listPages(id: number, signal?: AbortSignal): Promise<ComicPage[]> {
@@ -290,44 +312,120 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
     return { comic, pages };
   }
 
-  async function importComic(asset: DocumentPickerAsset): Promise<Comic> {
-    const source = new File(asset.uri);
+  async function importComic(asset: DocumentPickerAsset, restoreId?: number): Promise<Comic> {
+    if (mutating) throw new ComicArchiveError('다른 파일을 처리하고 있습니다. 잠시 후 다시 시도해 주세요.');
+    mutating = true;
+    let source: File | undefined;
     let destination: File | undefined;
     try {
+      source = new File(asset.uri);
       if (!/\.cbz$/i.test(asset.name)) throw new ComicArchiveError('확장자가 .cbz인 파일을 선택해 주세요.');
       if (!source.exists || source.size === 0) throw new ComicArchiveError('파일이 비어 있거나 접근할 수 없습니다.');
       if (source.size > ZIP_LIMITS.archiveBytes) throw new ComicArchiveError('CBZ 파일은 512 MB 이하만 지원합니다.');
       const db = await getDatabase();
+      // Expo's native hash reads64KiB chunks on both platforms. It is not a
+      // security decision: every existing-file match is compared byte for byte.
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
+      const contentHash = source.md5;
+      if (!contentHash || !/^[a-f0-9]{32}$/i.test(contentHash)) throw new ComicArchiveError('파일 내용을 확인하지 못했습니다. 다시 가져와 주세요.');
+      const missing = restoreId === undefined ? undefined : await db.getFirstAsync<Comic>('SELECT * FROM comics WHERE id = ?', restoreId);
+      if (restoreId !== undefined && (!missing || missing.status === 'deleting')) throw new ComicArchiveError('복원할 서재 항목을 찾을 수 없습니다.');
+      if (missing) {
+        let exists = false; try { exists = comicFile(missing).exists; } catch { /* Legacy path. */ }
+        if (exists || readers.has(missing.id)) throw new ComicArchiveError('기존 원본이 있거나 열람 중인 항목은 덮어쓰지 않습니다.');
+        if (missing.contentHash && (missing.size !== source.size || missing.contentHash !== contentHash)) throw new ComicArchiveError('기존 원본과 다른 파일입니다. 새 만화로 가져와 주세요.');
+      }
+      const candidates = await db.getAllAsync<Comic>("SELECT * FROM comics WHERE size = ? AND status != 'deleting' ORDER BY id", source.size);
+      for (const candidate of candidates) {
+        let existing: File;
+        try { existing = comicFile(candidate); } catch { continue; }
+        if (!existing.exists) continue;
+        if (!candidate.contentHash) {
+          candidate.contentHash = existing.md5;
+          await db.runAsync('UPDATE comics SET contentHash = ? WHERE id = ?', candidate.contentHash ?? null, candidate.id);
+        }
+        if (candidate.contentHash !== contentHash || existing.size !== source.size) continue;
+        const left = source.open(); const right = existing.open();
+        let identical: boolean;
+        try { identical = await equalFileBytes(source.size,
+          (offset, length) => { left.offset = offset; return left.readBytes(length); },
+          (offset, length) => { right.offset = offset; return right.readBytes(length); }); }
+        finally { left.close(); right.close(); }
+        if (identical) throw new DuplicateComicError(candidate);
+      }
+      if (Paths.availableDiskSpace < source.size + 32 * 1024 * 1024) throw new ComicArchiveError('파일을 보관할 저장 공간이 부족합니다. 공간을 확보한 뒤 다시 가져와 주세요.');
       const folder = new Directory(Paths.document, archiveFolder);
       folder.create({ intermediates: true, idempotent: true });
       destination = new File(folder, `${Date.now()}-${Math.random().toString(36).slice(2)}.cbz`);
       await source.copy(destination);
+      if (destination.size !== source.size || destination.md5 !== contentHash) throw new ComicArchiveError('파일 복사를 확인하지 못했습니다. 다시 가져와 주세요.');
       const importedAt = Date.now();
       const archivePath = `${archiveFolder}/${destination.name}`;
-      const result = await db.runAsync('INSERT INTO comics (name, uri, size, importedAt, archivePath) VALUES (?, ?, ?, ?, ?)',
-        asset.name, destination.uri, destination.size, importedAt, archivePath);
-      return { id: result.lastInsertRowId, name: asset.name, uri: destination.uri, size: destination.size,
-        importedAt, archivePath, status: 'stored', error: null, pageCount: 0, coverPath: null, coverError: null };
+      let id: number;
+      if (missing) {
+        await db.withExclusiveTransactionAsync(async (transaction) => {
+          await transaction.runAsync('DELETE FROM comic_pages WHERE comicId = ?', missing.id);
+          await transaction.runAsync("UPDATE comics SET name = ?, uri = ?, size = ?, contentHash = ?, archivePath = ?, status = 'stored', error = NULL, pageCount = 0, coverPath = NULL, coverError = NULL WHERE id = ?", asset.name, destination!.uri, destination!.size, contentHash, archivePath, missing.id);
+        });
+        id = missing.id;
+      } else {
+        const result = await db.runAsync('INSERT INTO comics (name, uri, size, importedAt, archivePath, contentHash) VALUES (?, ?, ?, ?, ?, ?)',
+          asset.name, destination.uri, destination.size, importedAt, archivePath, contentHash);
+        id = result.lastInsertRowId;
+      }
+      return { id, name: asset.name, uri: destination.uri, size: destination.size, contentHash,
+        importedAt: missing?.importedAt ?? importedAt, archivePath, status: 'stored', error: null, pageCount: 0, coverPath: null, coverError: null };
     } catch (error) {
       try { if (destination?.exists) destination.delete(); } catch { /* Original error takes precedence. */ }
-      throw error;
+      throw error instanceof ComicArchiveError ? error : new ComicArchiveError('파일을 보관하지 못했습니다. 파일 접근 권한과 저장 공간을 확인한 뒤 다시 가져와 주세요.');
     } finally {
-      try { if (source.uri.startsWith(Paths.cache.uri) && source.exists) source.delete(); } catch { /* Cache is regenerable. */ }
+      mutating = false;
+      try { if (source?.uri.startsWith(Paths.cache.uri) && source.exists) source.delete(); } catch { /* Cache is regenerable. */ }
     }
   }
 
+  async function finishDeletion(db: SQLiteDatabase, comic: Comic) {
+    // Only managed, validated paths may be removed; legacy external URIs stay untouched.
+    let original: File | undefined;
+    try { original = comicFile(comic); } catch { /* No managed original. */ }
+    for (const folder of [new Directory(extractedRoot(), String(comic.id)), new Directory(stagingRoot(), String(comic.id)),
+      new Directory(Paths.cache, `${cacheNamespace}-scroll-staging`, String(comic.id))]) if (folder.exists) folder.delete();
+    if (original?.exists) original.delete();
+    await db.runAsync('DELETE FROM comics WHERE id = ?', comic.id);
+    readingStore.forgetReadingState(comic.id);
+  }
+
+  async function deleteComic(id: number): Promise<void> {
+    if (mutating || preparing || readers.has(id)) throw new ComicArchiveError('열람·처리가 끝난 뒤 삭제를 다시 시도해 주세요.');
+    mutating = true; deleting.add(id);
+    try {
+      const db = await getDatabase();
+      await readingStore.drainReadingWrites();
+      if (preparing || readers.has(id)) throw new ComicArchiveError('열람·처리가 끝난 뒤 삭제를 다시 시도해 주세요.');
+      const comic = await db.getFirstAsync<Comic>('SELECT * FROM comics WHERE id = ?', id);
+      if (!comic) return;
+      await db.runAsync("UPDATE comics SET status = 'deleting', error = NULL WHERE id = ?", id);
+      try { await finishDeletion(db, comic); }
+      catch { await db.runAsync("UPDATE comics SET error = '파일 정리를 완료하지 못했습니다. 삭제를 다시 시도해 주세요.' WHERE id = ?", id);
+        throw new ComicArchiveError('파일 정리를 완료하지 못했습니다. 삭제를 다시 시도해 주세요.'); }
+    } finally { deleting.delete(id); mutating = false; }
+  }
+
   async function prepareComic(id: number, signal?: AbortSignal): Promise<void> {
+    if (mutating || deleting.has(id)) throw new ComicArchiveError('파일 관리가 끝난 뒤 다시 시도해 주세요.');
     await scrollCache.stop();
     checkCancelled(signal);
-    if (preparing) throw new ComicArchiveError('다른 파일을 처리하고 있습니다. 잠시 후 다시 시도해 주세요.');
+    if (preparing || mutating) throw new ComicArchiveError('다른 파일을 처리하고 있습니다. 잠시 후 다시 시도해 주세요.');
     preparing = true;
     let staging: Directory | undefined;
     let final: Directory | undefined;
     let db: SQLiteDatabase | undefined;
+    let deletionPending = false;
     try {
       db = await getDatabase();
       const comic = await db.getFirstAsync<Comic>('SELECT * FROM comics WHERE id = ?', id);
       if (!comic) throw new ComicArchiveError('서재 항목을 찾을 수 없습니다.');
+      if (comic.status === 'deleting') { deletionPending = true; throw new ComicArchiveError('삭제 중인 만화입니다. 서재에서 삭제를 다시 시도해 주세요.'); }
       final = new Directory(extractedRoot(), String(id));
       checkCancelled(signal);
       await db.runAsync("UPDATE comics SET status = 'extracting', error = NULL, pageCount = 0, coverPath = NULL, coverError = NULL WHERE id = ?", id);
@@ -403,6 +501,7 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
       });
       checkCancelled(signal);
     } catch (error) {
+      if (deletionPending) throw error;
       // Native work has settled by this point; cleanup cannot race it.
       try { if (staging?.exists) staging.delete(); if (final?.exists) final.delete(); }
       catch { /* Startup recovery removes abandoned staging directories. */ }
@@ -416,7 +515,7 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
     } finally { preparing = false; }
   }
 
-  return { listComics, listPages, openComic, importComic, prepareComic, retainComic, acquireScrollPage, clearExtractedCache, ...readingStore, dispose: async () => {
+  return { listComics, listPages, openComic, importComic, deleteComic, prepareComic, retainComic, acquireScrollPage, clearExtractedCache, ...readingStore, dispose: async () => {
     await readingStore.drainReadingWrites();
     await scrollCache.stop();
     if (preparing) throw new Error('Extraction is still running');
@@ -425,5 +524,5 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
   } };
 }
 
-export const { listComics, listPages, openComic, importComic, prepareComic, retainComic, acquireScrollPage, clearExtractedCache,
+export const { listComics, listPages, openComic, importComic, deleteComic, prepareComic, retainComic, acquireScrollPage, clearExtractedCache,
   getReadingState, saveReadingState, createComicReadingWriter, getReadingSaveFailures, subscribeReadingSaveFailures, retryReadingSaves } = createLibraryStore();

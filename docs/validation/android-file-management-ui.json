@@ -1,0 +1,20 @@
+{
+  "platform": "Android emulator API36",
+  "nativeBuild": "existing Android development APK",
+  "passed": 7,
+  "checks": [
+    "system picker imports synthetic CBZ and prepares its two pages",
+    "library displays the position after reader navigation",
+    "duplicate picker selection shows a notice and creates no additional book",
+    "cancelled native confirmation keeps original and library entry",
+    "confirmed native deletion removes library entry, original and extracted cache",
+    "other books and their original files stay unchanged",
+    "document provider source remains after deleting app copy"
+  ],
+  "fixture": "file-management-ui.cbz",
+  "otherBooks": 4,
+  "sourcePatch": "content identity and durable deletion schema6; final library focus/writes behavior",
+  "sourceBaseCommit": "2460d638052b5c6da5e3451b96b162274f169a8c",
+  "sourceDirty": true,
+  "scope": "Android emulator API36. iOS, actual low-disk conditions, large-archive hash latency/memory and process-kill during deletion remain pending."
+}
