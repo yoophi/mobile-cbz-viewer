@@ -8,7 +8,7 @@ import { boundZoom, containSize, focalZoom, IDENTITY_ZOOM, type ZoomSize, type Z
 export type ZoomScrollControls = { scrollGesture: ReturnType<typeof Gesture.Native>; scrollEnabled: boolean };
 type ZoomChildren = ReactNode | ((controls: ZoomScrollControls) => ReactNode);
 
-function SizedZoom({ size, image, children, onSettled }: { size: ZoomSize; image?: ZoomSize; children: ZoomChildren; onSettled?: (value: ZoomTransform) => void }) {
+function SizedZoom({ size, image, children, onSettled, onTap }: { size: ZoomSize; image?: ZoomSize; children: ZoomChildren; onSettled?: (value: ZoomTransform) => void; onTap?: (fraction: number, zoomed: boolean) => void }) {
   const content = containSize(size, image);
   const transform = useSharedValue(IDENTITY_ZOOM);
   const start = useSharedValue(IDENTITY_ZOOM);
@@ -59,7 +59,7 @@ function SizedZoom({ size, image, children, onSettled }: { size: ZoomSize; image
       const previous = transform.value;
       transform.value = boundZoom({ ...previous, x: previous.x + event.changeX, y: previous.y + event.changeY }, size, content);
     }).onFinalize(() => { if (onSettled) scheduleOnRN(onSettled, transform.value); });
-  const doubleTap = Gesture.Tap().numberOfTaps(2)
+  const doubleTap = Gesture.Tap().numberOfTaps(2).maxDelay(250)
     .onTouchesDown((event, manager) => { if (event.numberOfTouches > 1) manager.fail(); })
     .onEnd((event, success) => {
     if (!success) return;
@@ -69,6 +69,13 @@ function SizedZoom({ size, image, children, onSettled }: { size: ZoomSize; image
     scheduleOnRN(setZoomed, transform.value.scale > 1);
     if (onSettled) scheduleOnRN(onSettled, transform.value);
   });
+  // Wait for the double tap to fail before navigating. Drags, multi-touch and
+  // taps on an already zoomed image must never advance the reading anchor.
+  const singleTap = Gesture.Tap().maxDuration(250).maxDistance(10)
+    .onTouchesDown((event, manager) => { if (event.numberOfTouches > 1) manager.fail(); })
+    .onEnd((event, success) => {
+      if (success && onTap && !pinching.value) scheduleOnRN(onTap, event.x / size.width, transform.value.scale > 1);
+    });
   if (scrollable) {
     // Native FlatList must yield to pinch and zoomed pan. Pan fails immediately
     // at 1x, so ordinary one-finger scrolling stays available.
@@ -80,7 +87,7 @@ function SizedZoom({ size, image, children, onSettled }: { size: ZoomSize; image
     { translateX: transform.value.x }, { translateY: transform.value.y }, { scale: transform.value.scale },
   ] }));
   return <View style={styles.fill}>
-    <GestureDetector gesture={Gesture.Simultaneous(pinch, pan, doubleTap)}>
+    <GestureDetector gesture={Gesture.Simultaneous(pinch, pan, onTap ? Gesture.Exclusive(doubleTap, singleTap) : doubleTap)}>
       <View style={styles.fill} collapsable={false}>
         <Animated.View style={[styles.fill, animatedStyle]}>{typeof children === 'function'
           ? children({ scrollGesture, scrollEnabled: !zoomed && !pinchPending }) : children}</Animated.View>
@@ -94,15 +101,15 @@ function SizedZoom({ size, image, children, onSettled }: { size: ZoomSize; image
 }
 
 // A new page/mode gets a new instance; a size change remounts only the gesture
-// layer. Neither gesture changes the reading index or writes reading state.
-export function ZoomCanvas({ image, children, onSettled, resetKey = '' }: {
-  image?: ZoomSize; children: ZoomChildren; onSettled?: (value: ZoomTransform) => void; resetKey?: string;
+// layer. Zoom gestures do not change the reading index or write reading state.
+export function ZoomCanvas({ image, children, onSettled, onTap, resetKey = '' }: {
+  image?: ZoomSize; children: ZoomChildren; onSettled?: (value: ZoomTransform) => void; onTap?: (fraction: number, zoomed: boolean) => void; resetKey?: string;
 }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   return <View style={[styles.fill, styles.clip]} onLayout={({ nativeEvent: { layout } }) => {
     setSize((previous) => previous.width === layout.width && previous.height === layout.height ? previous : { width: layout.width, height: layout.height });
   }}>
-    {size.width > 0 && size.height > 0 ? <SizedZoom key={`${size.width}:${size.height}:${resetKey}`} size={size} image={image} onSettled={onSettled}>{children}</SizedZoom> : null}
+    {size.width > 0 && size.height > 0 ? <SizedZoom key={`${size.width}:${size.height}:${resetKey}`} size={size} image={image} onSettled={onSettled} onTap={onTap}>{children}</SizedZoom> : null}
   </View>;
 }
 const styles = StyleSheet.create({

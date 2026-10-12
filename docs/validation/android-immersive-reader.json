@@ -1,0 +1,55 @@
+{
+  "workingTree": true,
+  "sourceFilesSha256": {
+    "src/components/comic-reader.tsx": "357d1c102dc96a7690d13b4a4c5013ce2821951baec630eb85c1f7fe083eefac",
+    "src/components/zoom-canvas.tsx": "3e3d74d777c57edb1f2902fde5c4dac444b3834f96b4ebb53a3ddb9f86ac01a3",
+    "src/utils/page-spread.ts": "8f02cc2e4d1e8d81da058d3cd97226127919d96d899a7c8678de40afd91df46e"
+  },
+  "sourceCommit": "74eb71d7c280eca63ae0f6c7ca4cf7a97902aa03",
+  "environment": "owned API36 emulator, 1080x2424, density420; debug development build",
+  "checks": [
+    "center tap hides top navigation",
+    "hidden navigation hides system status bar",
+    "hidden chrome gives image at least 95 percent of safe height",
+    "no visible previous/next text or bottom toolbar",
+    "second center tap shows top navigation",
+    "visible navigation shows system status bar",
+    "center taps preserve source page",
+    "right transparent region advances one page",
+    "left transparent region returns one page",
+    "edge double tap zooms without advancing",
+    "zoomed drag preserves page",
+    "zoomed edge tap does not advance",
+    "center can reveal controls while zoomed",
+    "zoom reset or status-bar viewport resize restores image",
+    "native two-finger pinch zooms without page navigation",
+    "explicit double layout works on narrow phone",
+    "two image canvases touch with zero gap",
+    "two images are centered as one spread",
+    "double layout advances by a whole pair",
+    "double layout returns to preceding pair",
+    "RTL reverses physical image order",
+    "RTL left region advances a pair",
+    "restart restores source page and double layout",
+    "large-font top navigation remains available",
+    "scroll mode remains available from settings",
+    "library restores system status bar"
+  ],
+  "observations": {
+    "pairBounds": [
+      [
+        0,
+        847,
+        540,
+        1657
+      ],
+      [
+        540,
+        847,
+        1080,
+        1657
+      ]
+    ],
+    "doubleCounter": "12–13 / 40"
+  }
+}
