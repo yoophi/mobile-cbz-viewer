@@ -1,0 +1,22 @@
+{
+  "platform": "android",
+  "checks": [
+    {
+      "name": "Pressure evicts old cache, protects active reader, preserves originals",
+      "passed": true
+    },
+    {
+      "name": "Manual cleanup keeps active reader and removes other cache/page metadata",
+      "passed": true
+    },
+    {
+      "name": "Evicted pages and cover regenerate from original on open",
+      "passed": true
+    },
+    {
+      "name": "Uncommitted cache folders are removed before capacity accounting",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

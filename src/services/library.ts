@@ -4,6 +4,7 @@ import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 
 import { checkCancelled, ComicArchiveError, inspectArchive, verifyArchiveImages, ZIP_LIMITS } from '@/utils/zip-validation';
 import { comparePagePaths } from '@/utils/page-order';
+import { CACHE_LIMITS, selectCacheEvictions, type CacheEntry, type CacheBudget } from '@/utils/cache-policy';
 
 export type Comic = {
   id: number; name: string; uri: string; size: number; importedAt: number;
@@ -13,6 +14,13 @@ export type Comic = {
 export type ComicPage = { comicId: number; position: number; path: string; size: number; uri: string };
 // Native ZIP cancellation is global; allow only one preparation across all stores.
 let preparing = false;
+
+async function clearNativeImageDiskCache() {
+  // Image.loadAsync used by cover generation has native loader defaults.
+  // Pages/covers use cachePolicy=none; retain only our budgeted extracted files.
+  const { Image } = await import('expo-image');
+  if (!await Image.clearDiskCache()) throw new ComicArchiveError('이미지 캐시를 정리하지 못했습니다. 저장 공간을 확인해 주세요.');
+}
 
 async function createCover(source: File, destination: File) {
   const { Image } = await import('expo-image');
@@ -34,11 +42,73 @@ async function createCover(source: File, destination: File) {
   }
 }
 
-export function createLibraryStore(databaseName = 'library.db', archiveFolder = 'comics', cacheNamespace = 'comic') {
+export function createLibraryStore(databaseName = 'library.db', archiveFolder = 'comics', cacheNamespace = 'comic', cacheBudget: CacheBudget = CACHE_LIMITS) {
   if (![databaseName, archiveFolder, cacheNamespace].every((name) => /^[a-zA-Z0-9.-]+$/.test(name) && !name.startsWith('.'))) throw new Error('Invalid storage name');
+  if (!Object.values(cacheBudget).every((value) => Number.isSafeInteger(value) && value > 0)) throw new Error('Invalid cache budget');
   let database: Promise<SQLiteDatabase> | undefined;
+  const readers = new Map<number, number>();
   const stagingRoot = () => new Directory(Paths.cache, `${cacheNamespace}-staging`);
   const extractedRoot = () => new Directory(Paths.cache, `${cacheNamespace}-extracted`);
+
+  function retainComic(id: number) {
+    readers.set(id, (readers.get(id) ?? 0) + 1);
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      const count = (readers.get(id) ?? 1) - 1;
+      if (count) readers.set(id, count); else readers.delete(id);
+    };
+  }
+
+  async function evictCache(db: SQLiteDatabase, id: number) {
+    // Mark regenerable before disk deletion: interruption cannot leave a ready stale book.
+    await db.withExclusiveTransactionAsync(async (transaction) => {
+      await transaction.runAsync('DELETE FROM comic_pages WHERE comicId = ?', id);
+      await transaction.runAsync("UPDATE comics SET status = 'stored', pageCount = 0, coverPath = NULL, coverError = NULL, error = NULL WHERE id = ?", id);
+      await transaction.runAsync('DELETE FROM comic_cache_access WHERE comicId = ?', id);
+    });
+    const folder = new Directory(extractedRoot(), String(id));
+    if (folder.exists) folder.delete();
+  }
+
+  async function trimCache(db: SQLiteDatabase, protectedId?: number, incomingBytes = 0, incomingCoverBytes = 0) {
+    const metadata = await db.getAllAsync<{ id: number; lastAccess: number }>(`SELECT c.id, COALESCE(a.lastAccess, c.importedAt) AS lastAccess
+      FROM comics c LEFT JOIN comic_cache_access a ON a.comicId = c.id WHERE c.status = 'ready'`);
+    const known = new Set(metadata.map((entry) => String(entry.id)));
+    const root = extractedRoot();
+    // Retry deletions interrupted after their metadata was made regenerable.
+    // A failed deletion must not disappear from subsequent capacity accounting.
+    if (root.exists) for (const item of root.list()) {
+      if (item instanceof Directory && /^[0-9]+$/.test(item.name) && !known.has(item.name)
+        && Number(item.name) !== protectedId && !readers.has(Number(item.name))) item.delete();
+    }
+    const entries: CacheEntry[] = [];
+    for (const entry of metadata) {
+      if (entry.id === protectedId && incomingBytes) continue;
+      const folder = new Directory(extractedRoot(), String(entry.id));
+      if (!folder.exists) continue;
+      const bytes = folder.size;
+      if (bytes === null) throw new ComicArchiveError('캐시 용량을 확인하지 못했습니다. 다시 시도해 주세요.');
+      entries.push({ ...entry, bytes, coverBytes: new File(folder, 'cover.jpg').size });
+    }
+    const protectedIds = new Set(readers.keys());
+    if (protectedId !== undefined) protectedIds.add(protectedId);
+    let evictions: number[];
+    try { evictions = selectCacheEvictions(entries, protectedIds, incomingBytes, incomingCoverBytes, cacheBudget); }
+    catch (cause) { throw new ComicArchiveError(cause instanceof Error ? cause.message : '캐시 용량을 확보하지 못했습니다.'); }
+    for (const id of evictions) await evictCache(db, id);
+  }
+
+  async function clearExtractedCache() {
+    if (preparing) throw new ComicArchiveError('추출이 끝난 뒤 캐시를 정리해 주세요.');
+    preparing = true;
+    try {
+      const db = await getDatabase();
+      const entries = await db.getAllAsync<{ id: number }>("SELECT id FROM comics WHERE status = 'ready'");
+      for (const { id } of entries) if (!readers.has(id)) await evictCache(db, id);
+    } finally { preparing = false; }
+  }
 
   function comicFile(comic: Comic) {
     if (!comic.archivePath || !comic.archivePath.startsWith(`${archiveFolder}/`) || !/^[0-9]+-[a-z0-9]+\.cbz$/.test(comic.archivePath.slice(archiveFolder.length + 1))) {
@@ -119,7 +189,10 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
               PRAGMA user_version = 3;`);
           }
         });
+        await db.execAsync('CREATE TABLE IF NOT EXISTS comic_cache_access (comicId INTEGER PRIMARY KEY REFERENCES comics(id) ON DELETE CASCADE, lastAccess INTEGER NOT NULL)');
         await recover(db);
+        await trimCache(db);
+        await clearNativeImageDiskCache();
         return db;
       } catch (error) {
         await db.closeAsync();
@@ -157,6 +230,7 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
     }
     checkCancelled(signal);
     if (!pages.length) throw new ComicArchiveError('열람할 페이지가 없습니다. 파일을 확인해 주세요.');
+    await db.runAsync('INSERT OR REPLACE INTO comic_cache_access (comicId, lastAccess) VALUES (?, ?)', id, Date.now());
     return { comic, pages };
   }
 
@@ -212,6 +286,14 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
       } finally { handle.close(); }
       checkCancelled(signal);
       const images = entries.filter((entry) => entry.image).sort((a, b) => comparePagePaths(a.path, b.path));
+      const imageBytes = images.reduce((sum, entry) => sum + entry.size, 0);
+      const manifest = JSON.stringify({ version: 2, entries: images });
+      // Three UTF-8 bytes per UTF-16 code unit is a safe upper bound without
+      // allocating another metadata buffer. The fixed reserve covers the thumbnail.
+      const estimatedBytes = imageBytes + manifest.length * 3 + cacheBudget.bookOverheadBytes;
+      // Reserve cover/manifest space before native extraction allocates disk.
+      if (estimatedBytes > cacheBudget.extractedBytes) throw new ComicArchiveError('추출 후 이미지가 캐시 예산을 초과합니다. 더 작은 CBZ를 선택해 주세요.');
+      await trimCache(db, id, estimatedBytes, cacheBudget.bookOverheadBytes);
       if (Paths.availableDiskSpace < images.reduce((sum, entry) => sum + entry.size, 0) + 32 * 1024 * 1024) {
         throw new ComicArchiveError('압축을 풀 저장 공간이 부족합니다. 공간을 확보한 뒤 다시 시도해 주세요.');
       }
@@ -242,8 +324,12 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
         await createCover(new File(pagesFolder, images[0].path), new File(staging, 'cover.jpg'));
         coverPath = `${id}/cover.jpg`;
       } catch { coverError = '표지를 만들지 못했습니다. 페이지를 열 때 이미지 상태를 확인해 주세요.'; }
+      await clearNativeImageDiskCache();
       checkCancelled(signal);
-      new File(staging, 'manifest.json').write(JSON.stringify({ version: 2, entries: images }));
+      new File(staging, 'manifest.json').write(manifest);
+      const stagedBytes = staging.size;
+      if (stagedBytes === null) throw new ComicArchiveError('추출 캐시 용량을 확인하지 못했습니다.');
+      await trimCache(db, id, stagedBytes, new File(staging, 'cover.jpg').size);
       extractedRoot().create({ idempotent: true, intermediates: true });
       await staging.move(final);
       checkCancelled(signal);
@@ -254,6 +340,7 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
         }
         checkCancelled(signal);
         await transaction.runAsync("UPDATE comics SET status = 'ready', error = NULL, pageCount = ?, coverPath = ?, coverError = ? WHERE id = ?", images.length, coverPath, coverError, id);
+        await transaction.runAsync('INSERT OR REPLACE INTO comic_cache_access (comicId, lastAccess) VALUES (?, ?)', id, Date.now());
       });
       checkCancelled(signal);
     } catch (error) {
@@ -270,11 +357,11 @@ export function createLibraryStore(databaseName = 'library.db', archiveFolder = 
     } finally { preparing = false; }
   }
 
-  return { listComics, listPages, openComic, importComic, prepareComic, dispose: async () => {
+  return { listComics, listPages, openComic, importComic, prepareComic, retainComic, clearExtractedCache, dispose: async () => {
     if (preparing) throw new Error('Extraction is still running');
     if (database) await (await database).closeAsync();
     database = undefined;
   } };
 }
 
-export const { listComics, listPages, openComic, importComic, prepareComic } = createLibraryStore();
+export const { listComics, listPages, openComic, importComic, prepareComic, retainComic, clearExtractedCache } = createLibraryStore();

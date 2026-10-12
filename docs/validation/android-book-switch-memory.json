@@ -1,0 +1,62 @@
+[
+  {
+    "stage": "fresh library",
+    "pssKiB": 391120,
+    "bitmapCount": 4,
+    "bitmapKiB": 1017
+  },
+  {
+    "stage": "switch1 book1 page15",
+    "pssKiB": 407931,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch2 book2 page15",
+    "pssKiB": 397144,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch3 book1 page15",
+    "pssKiB": 400433,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch4 book2 page15",
+    "pssKiB": 404863,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch5 book1 page15",
+    "pssKiB": 415129,
+    "bitmapCount": 6,
+    "bitmapKiB": 14685
+  },
+  {
+    "stage": "switch6 book2 page15",
+    "pssKiB": 411596,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch7 book1 page15",
+    "pssKiB": 415132,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch8 book2 page15",
+    "pssKiB": 418888,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "library after 8 switches",
+    "pssKiB": 406796,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  }
+]

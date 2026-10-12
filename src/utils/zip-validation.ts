@@ -189,6 +189,7 @@ export async function verifyArchiveImages(entries: ArchiveEntry[], read: ReadArc
     };
     try {
       const inflater = entry.method === 8 ? new Inflate(consume) : undefined;
+      let lastYield = Date.now();
       // Small compressed chunks bound temporary output allocation even with forged sizes.
       for (let offset = 0; offset < entry.compressedSize;) {
         checkCancelled(signal);
@@ -198,8 +199,12 @@ export async function verifyArchiveImages(entries: ArchiveEntry[], read: ReadArc
         offset += length;
         if (inflater) inflater.push(bytes, offset === entry.compressedSize);
         else consume(bytes);
-        // Release the JS thread between chunks so cancellation/UI can run.
-        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+        // Retain 4 KiB allocation bounds but avoid a timer per native read on large books.
+        // Yield every 64 KiB, after 8 ms of work, and at each image boundary.
+        if (offset % 65536 === 0 || Date.now() - lastYield >= 8 || offset === entry.compressedSize) {
+          await new Promise<void>((resolve) => setTimeout(resolve, 0));
+          lastYield = Date.now();
+        }
       }
       if (count !== entry.size || ((checksum ^ 0xffffffff) >>> 0) !== entry.crc) reject('이미지 데이터가 손상되었습니다.');
       const png = [137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => prefix[index] === byte);

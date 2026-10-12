@@ -1,0 +1,79 @@
+[
+  {
+    "stage": "book1000 page1",
+    "page": 1,
+    "pssKiB": 387398,
+    "bitmapCount": 6,
+    "bitmapKiB": 8188
+  },
+  {
+    "stage": "forward",
+    "page": 100,
+    "pssKiB": 389658,
+    "bitmapCount": 6,
+    "bitmapKiB": 8188
+  },
+  {
+    "stage": "forward",
+    "page": 200,
+    "pssKiB": 400310,
+    "bitmapCount": 6,
+    "bitmapKiB": 8188
+  },
+  {
+    "stage": "forward",
+    "page": 300,
+    "pssKiB": 404508,
+    "bitmapCount": 6,
+    "bitmapKiB": 8188
+  },
+  {
+    "stage": "forward",
+    "page": 400,
+    "pssKiB": 418586,
+    "bitmapCount": 6,
+    "bitmapKiB": 8188
+  },
+  {
+    "stage": "forward",
+    "page": 500,
+    "pssKiB": 402414,
+    "bitmapCount": 6,
+    "bitmapKiB": 8188
+  },
+  {
+    "stage": "forward",
+    "page": 600,
+    "pssKiB": 405207,
+    "bitmapCount": 6,
+    "bitmapKiB": 8188
+  },
+  {
+    "stage": "forward",
+    "page": 700,
+    "pssKiB": 409280,
+    "bitmapCount": 6,
+    "bitmapKiB": 8188
+  },
+  {
+    "stage": "forward",
+    "page": 800,
+    "pssKiB": 410206,
+    "bitmapCount": 6,
+    "bitmapKiB": 8188
+  },
+  {
+    "stage": "forward",
+    "page": 900,
+    "pssKiB": 412841,
+    "bitmapCount": 6,
+    "bitmapKiB": 8188
+  },
+  {
+    "stage": "forward",
+    "page": 1000,
+    "pssKiB": 419205,
+    "bitmapCount": 7,
+    "bitmapKiB": 8379
+  }
+]

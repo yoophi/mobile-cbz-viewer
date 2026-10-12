@@ -8,7 +8,7 @@ export function ComicCover({ uri, name }: { uri?: string; name: string }) {
 
 function CoverImage({ uri, name }: { uri: string; name: string }) {
   const [failed, setFailed] = useState(false);
-  return !failed ? <Image source={uri} contentFit="contain" cachePolicy="disk"
+  return !failed ? <Image source={uri} contentFit="contain" cachePolicy="none" allowDownscaling enforceEarlyResizing autoplay={false}
     accessible accessibilityRole="image" accessibilityLabel={`${name} 표지`} onError={() => setFailed(true)} style={styles.image} />
     : <Text style={styles.placeholder}>표지 없음</Text>;
 }

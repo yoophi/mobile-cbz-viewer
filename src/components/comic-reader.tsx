@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { openComic, prepareComic, type Comic, type ComicPage } from '@/services/library';
+import { openComic, prepareComic, retainComic, type Comic, type ComicPage } from '@/services/library';
 import { pageAfter, physicalPageAction, type ReadingDirection } from '@/utils/reader-navigation';
 
 function ReaderButton({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
@@ -18,6 +18,7 @@ function PageImage({ page, repair }: { page: ComicPage; repair: () => void }) {
   return <View style={styles.canvas}>
     <Image key={attempt} source={{ uri: page.uri }} style={styles.image} contentFit="contain"
       cachePolicy="none" recyclingKey={`${page.comicId}:${page.position}:${attempt}`} allowDownscaling
+      enforceEarlyResizing autoplay={false}
       accessibilityLabel={`${page.position + 1} 페이지`} onLoad={() => setLoading(false)}
       onError={() => { setLoading(false); setFailed(true); }} />
     {loading ? <View style={styles.overlay}><ActivityIndicator color="#9abfff" /><Text style={styles.text}>이미지 불러오는 중…</Text></View> : null}
@@ -40,6 +41,7 @@ export function ComicReader({ id }: { id?: number }) {
   useEffect(() => {
     if (id === undefined) return;
     const comicId = id;
+    const release = retainComic(comicId);
     const controller = new AbortController();
     let active = true;
     async function load() {
@@ -53,7 +55,7 @@ export function ComicReader({ id }: { id?: number }) {
     }).catch((cause) => {
       if (active) setError(cause instanceof Error ? cause.message : '만화를 열지 못했습니다.');
     }).finally(() => { if (active) setBusy(false); });
-    return () => { active = false; controller.abort(); };
+    return () => { active = false; controller.abort(); release(); };
   }, [id, request]);
 
   function reload(repair: boolean) {

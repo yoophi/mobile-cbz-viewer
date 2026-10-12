@@ -1,0 +1,158 @@
+[
+  {
+    "stage": "fresh library",
+    "pssKiB": 408552,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch1 book1 page15",
+    "pssKiB": 407710,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch2 book2 page15",
+    "pssKiB": 409158,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch3 book1 page15",
+    "pssKiB": 410786,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch4 book2 page15",
+    "pssKiB": 411873,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch5 book1 page15",
+    "pssKiB": 413154,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch6 book2 page15",
+    "pssKiB": 414353,
+    "bitmapCount": 7,
+    "bitmapKiB": 21520
+  },
+  {
+    "stage": "switch7 book1 page15",
+    "pssKiB": 412167,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch8 book2 page15",
+    "pssKiB": 360250,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch9 book1 page15",
+    "pssKiB": 370787,
+    "bitmapCount": 7,
+    "bitmapKiB": 21520
+  },
+  {
+    "stage": "switch10 book2 page15",
+    "pssKiB": 371845,
+    "bitmapCount": 6,
+    "bitmapKiB": 14685
+  },
+  {
+    "stage": "switch11 book1 page15",
+    "pssKiB": 372652,
+    "bitmapCount": 6,
+    "bitmapKiB": 14685
+  },
+  {
+    "stage": "switch12 book2 page15",
+    "pssKiB": 374108,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch13 book1 page15",
+    "pssKiB": 376470,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch14 book2 page15",
+    "pssKiB": 374928,
+    "bitmapCount": 6,
+    "bitmapKiB": 14685
+  },
+  {
+    "stage": "switch15 book1 page15",
+    "pssKiB": 375996,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch16 book2 page15",
+    "pssKiB": 376742,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch17 book1 page15",
+    "pssKiB": 377734,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch18 book2 page15",
+    "pssKiB": 378427,
+    "bitmapCount": 6,
+    "bitmapKiB": 14685
+  },
+  {
+    "stage": "switch19 book1 page15",
+    "pssKiB": 381025,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch20 book2 page15",
+    "pssKiB": 381272,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch21 book1 page15",
+    "pssKiB": 381677,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch22 book2 page15",
+    "pssKiB": 382443,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch23 book1 page15",
+    "pssKiB": 382438,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "switch24 book2 page15",
+    "pssKiB": 383419,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "library after 24 further switches",
+    "pssKiB": 374622,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  }
+]

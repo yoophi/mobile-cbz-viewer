@@ -1,0 +1,56 @@
+[
+  {
+    "stage": "library after 2 imports",
+    "pssKiB": 366732,
+    "bitmapCount": 4,
+    "bitmapKiB": 1017
+  },
+  {
+    "stage": "book2 page1",
+    "pssKiB": 378472,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "book2 long page40 pass1",
+    "pssKiB": 384736,
+    "bitmapCount": 6,
+    "bitmapKiB": 8041
+  },
+  {
+    "stage": "book2 page1 pass1",
+    "pssKiB": 403347,
+    "bitmapCount": 7,
+    "bitmapKiB": 14876
+  },
+  {
+    "stage": "book2 long page40 pass2",
+    "pssKiB": 380957,
+    "bitmapCount": 6,
+    "bitmapKiB": 8041
+  },
+  {
+    "stage": "book2 page1 pass2",
+    "pssKiB": 390790,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "book2 long page40 pass3",
+    "pssKiB": 381602,
+    "bitmapCount": 6,
+    "bitmapKiB": 8041
+  },
+  {
+    "stage": "book2 page1 pass3",
+    "pssKiB": 394746,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  },
+  {
+    "stage": "library after 234 page changes",
+    "pssKiB": 385237,
+    "bitmapCount": 5,
+    "bitmapKiB": 7851
+  }
+]
